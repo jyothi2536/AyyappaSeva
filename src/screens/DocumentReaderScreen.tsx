@@ -29,7 +29,12 @@ export default function DocumentReaderScreen({
   const [pages, setPages] = useState(0);
   const [fontSize, setFontSize] = useState(18);
   useEffect(() => {
-    if (!document.uri || document.type === "PDF" || document.type === "AUDIO") {
+    if (
+      !document.uri ||
+      document.type === "PDF" ||
+      document.type === "AUDIO" ||
+      document.type === "DOC"
+    ) {
       setLoading(false);
       return;
     }
@@ -46,6 +51,20 @@ export default function DocumentReaderScreen({
       )
       .finally(() => setLoading(false));
   }, [document]);
+  const openLegacyDocument = async () => {
+    if (!document.uri) return;
+    try {
+      const uri =
+        Platform.OS === "android"
+          ? await FileSystem.getContentUriAsync(document.uri)
+          : document.uri;
+      await Linking.openURL(uri);
+    } catch {
+      setError(
+        "No compatible app could open this legacy DOC file. Convert it to DOCX or PDF for the built-in reader.",
+      );
+    }
+  };
   const isPdf = document.type === "PDF";
   return (
     <View style={s.root}>
@@ -96,6 +115,21 @@ export default function DocumentReaderScreen({
             label="Open audio player"
             icon="open-outline"
             onPress={() => document.uri && Linking.openURL(document.uri)}
+          />
+        </View>
+      ) : document.type === "DOC" ? (
+        <View style={s.empty}>
+          <Icon name="document-text" size={44} color={colors.gold} />
+          <Text style={s.emptyTitle}>Legacy Word document</Text>
+          <Text style={s.error}>
+            DOC files require a compatible document app. PDF and DOCX files
+            can be read directly inside Ayyappa Seva.
+          </Text>
+          {error ? <Text style={s.error}>{error}</Text> : null}
+          <GoldButton
+            label="Open with another app"
+            icon="open-outline"
+            onPress={() => void openLegacyDocument()}
           />
         </View>
       ) : loading ? (

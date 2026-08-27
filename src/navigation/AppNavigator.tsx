@@ -20,6 +20,9 @@ import LyricsScreen from "../screens/LyricsScreen";
 import DocumentReaderScreen from "../screens/DocumentReaderScreen";
 import RegistrationScreen from "../screens/RegistrationScreen";
 import AdminScreen from "../screens/AdminScreen";
+import AdminTempleEventScreen from "../screens/AdminTempleEventScreen";
+import AdminPadiPujaScreen from "../screens/AdminPadiPujaScreen";
+import AdminCalendarScreen from "../screens/AdminCalendarScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tabs = createBottomTabNavigator<TabParamList>();
@@ -37,11 +40,11 @@ const icons: Record<
   Profile: { active: "person", inactive: "person-outline" },
 };
 function MainTabs() {
-  const { t } = useApp();
+  const { t, eventT } = useApp();
   const labels: Record<keyof TabParamList, string> = {
     Home: t.home,
     Songs: t.songs,
-    Updates: t.updates,
+    Updates: eventT.events,
     Temple: t.temple,
     Profile: t.profile,
   };
@@ -112,6 +115,12 @@ export default function AppNavigator() {
         >
           <Stack.Screen name="Registration" component={RegistrationScreen} />
           <Stack.Screen name="Admin" component={AdminScreen} />
+          <Stack.Screen
+            name="AdminTempleEvent"
+            component={AdminTempleEventScreen}
+          />
+          <Stack.Screen name="AdminPadiPuja" component={AdminPadiPujaScreen} />
+          <Stack.Screen name="AdminCalendar" component={AdminCalendarScreen} />
         </Stack.Group>
       </Stack.Navigator>
     </NavigationContainer>

@@ -1,16 +1,26 @@
-import React from "react";
+import React, { useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Icon, Page, ScreenHeader } from "../components/UI";
 import { builtInDocuments, scriptureFeatureCopy } from "../data/content";
+import { prepareBuiltInDocument } from "../services/documents";
 import { useApp } from "../state/AppContext";
-import type { RootStackParamList, Song } from "../types";
+import type { BuiltInDocument, RootStackParamList, Song } from "../types";
 import { colors } from "../theme";
+
+const FEATURED_DOCUMENT_IDS = new Set([
+  "mahishasura-mardini-four-languages",
+  "lingashtakam-four-languages",
+  "bilvashtakam-four-languages",
+  "hanuman-chalisa-four-languages",
+  "kala-bhairava-ashtakam-four-languages",
+]);
 
 export default function SongsScreen() {
   const { t, songs, language } = useApp();
+  const [preparingDocument, setPreparingDocument] = useState<string | null>(null);
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const open = (song: Song) => {
@@ -24,6 +34,23 @@ export default function SongsScreen() {
     Alert.alert(song.title, "Audio will be added by a temple administrator.");
   };
   const scripture = scriptureFeatureCopy[language];
+  const featuredDocuments = builtInDocuments.filter((document) =>
+    FEATURED_DOCUMENT_IDS.has(document.id),
+  );
+  const openBuiltInDocument = async (document: BuiltInDocument) => {
+    try {
+      setPreparingDocument(document.id);
+      const uri = await prepareBuiltInDocument(document);
+      navigation.navigate("DocumentReader", { document: { ...document, uri } });
+    } catch (error) {
+      Alert.alert(
+        "Unable to open document",
+        error instanceof Error ? error.message : "Please try again.",
+      );
+    } finally {
+      setPreparingDocument(null);
+    }
+  };
   return (
     <Page>
       <ScreenHeader
@@ -66,6 +93,28 @@ export default function SongsScreen() {
       </Pressable>
       <Text style={s.label}>DEVOTIONAL COLLECTION</Text>
       <View style={s.list}>
+        {featuredDocuments.map((document) => (
+          <Pressable
+            key={document.id}
+            onPress={() => openBuiltInDocument(document)}
+            style={s.row}
+            disabled={preparingDocument === document.id}
+          >
+            <View style={[s.cover, { backgroundColor: "#3B2B14" }]}>
+              <Icon name="document-text" color={colors.gold} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.title}>{document.title}</Text>
+              <Text style={s.meta}>
+                {preparingDocument === document.id
+                  ? t.preparing
+                  : document.subtitle}
+              </Text>
+            </View>
+            <Text style={s.type}>PDF</Text>
+            <Icon name="chevron-forward" color={colors.muted} size={18} />
+          </Pressable>
+        ))}
         {songs.map((song) => (
           <Pressable key={song.id} onPress={() => open(song)} style={s.row}>
             <View

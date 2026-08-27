@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -15,26 +16,53 @@ import { useApp } from "../state/AppContext";
 import type { Language } from "../types";
 import { colors } from "../theme";
 
-export default function OnboardingScreen() {
-  const { finishOnboarding } = useApp();
+type OnboardingScreenProps = {
+  returning?: boolean;
+  onComplete?: () => void;
+};
+
+export default function OnboardingScreen({
+  returning = false,
+  onComplete,
+}: OnboardingScreenProps) {
+  const { finishOnboarding, language } = useApp();
+  const { width } = useWindowDimensions();
   const [stage, setStage] = useState<"doors" | "language">("doors");
-  const [selected, setSelected] = useState<Language>("en");
+  const [selected, setSelected] = useState<Language>(language);
   const left = useRef(new Animated.Value(0)).current;
   const right = useRef(new Animated.Value(0)).current;
+  const completionRef = useRef(onComplete);
+  completionRef.current = onComplete;
   useEffect(() => {
-    Animated.parallel([
+    left.setValue(0);
+    right.setValue(0);
+    let completionTimer: ReturnType<typeof setTimeout> | undefined;
+    const distance = width / 2 + 12;
+    const animation = Animated.parallel([
       Animated.timing(left, {
-        toValue: -230,
+        toValue: -distance,
         duration: 1800,
         useNativeDriver: true,
       }),
       Animated.timing(right, {
-        toValue: 230,
+        toValue: distance,
         duration: 1800,
         useNativeDriver: true,
       }),
-    ]).start();
-  }, [left, right]);
+    ]);
+    animation.start(({ finished }) => {
+      if (finished && returning) {
+        completionTimer = setTimeout(
+          () => completionRef.current?.(),
+          700,
+        );
+      }
+    });
+    return () => {
+      animation.stop();
+      if (completionTimer) clearTimeout(completionTimer);
+    };
+  }, [left, returning, right, width]);
   if (stage === "language") {
     const copy = onboardingCopy[selected];
     return (
@@ -64,7 +92,10 @@ export default function OnboardingScreen() {
           </View>
           <Pressable
             style={s.continue}
-            onPress={() => finishOnboarding(selected)}
+            onPress={async () => {
+              await finishOnboarding(selected);
+              onComplete?.();
+            }}
           >
             <Text style={s.continueText}>{copy.continue}</Text>
             <Icon name="arrow-forward" color={colors.ink} />
@@ -89,8 +120,13 @@ export default function OnboardingScreen() {
           <Text style={s.subtitle}>
             Welcome to your sacred temple community
           </Text>
-          <Pressable style={s.next} onPress={() => setStage("language")}>
-            <Text style={s.continueText}>Next</Text>
+          <Pressable
+            style={s.next}
+            onPress={() =>
+              returning ? onComplete?.() : setStage("language")
+            }
+          >
+            <Text style={s.continueText}>{returning ? "Enter" : "Next"}</Text>
             <Icon name="arrow-forward" color={colors.ink} />
           </Pressable>
         </View>

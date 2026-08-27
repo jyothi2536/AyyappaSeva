@@ -1,5 +1,7 @@
-import React from "react";
-import { StyleSheet, View } from "react-native";
+import React, { useCallback, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useFonts } from "expo-font";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Icon } from "./src/components/UI";
@@ -10,12 +12,24 @@ import { colors } from "./src/theme";
 
 function AppContent() {
   const { storageReady, onboardingComplete } = useApp();
+  const [launchWelcomeComplete, setLaunchWelcomeComplete] = useState(false);
+  const completeLaunchWelcome = useCallback(
+    () => setLaunchWelcomeComplete(true),
+    [],
+  );
   if (!storageReady)
     return (
       <View style={styles.loading}>
         <StatusBar style="light" />
         <Icon name="flame" size={34} color={colors.gold} />
       </View>
+    );
+  if (!launchWelcomeComplete)
+    return (
+      <OnboardingScreen
+        returning={onboardingComplete}
+        onComplete={completeLaunchWelcome}
+      />
     );
   if (!onboardingComplete) return <OnboardingScreen />;
   return (
@@ -26,6 +40,17 @@ function AppContent() {
   );
 }
 export default function App() {
+  const [iconsLoaded, iconsError] = useFonts(Ionicons.font);
+
+  if (!iconsLoaded && !iconsError) {
+    return (
+      <View style={styles.loading}>
+        <StatusBar style="light" />
+        <Text style={styles.loadingMark}>◆</Text>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaProvider>
       <AppProvider>
@@ -40,5 +65,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.ink,
     alignItems: "center",
     justifyContent: "center",
+  },
+  loadingMark: {
+    color: colors.gold,
+    fontSize: 34,
   },
 });

@@ -15,15 +15,42 @@ import {
   translations,
   type Copy,
 } from "../data/content";
-import type { Language, Song, Update } from "../types";
+import { eventTranslations, initialCalendarEvents } from "../data/events";
+import {
+  cancelEventReminders,
+  scheduleEventReminders,
+} from "../services/eventNotifications";
+import {
+  addCalendarEvent,
+  addTempleUpdate,
+  firebaseConfigured,
+  removeCalendarEvent,
+  removeCalendarYear,
+  signInAdmin,
+  signOutAdmin,
+  subscribeToAdmin,
+  subscribeToCalendarEvents,
+  subscribeToUpdates,
+} from "../services/firebase";
+import type {
+  CalendarEvent,
+  CalendarEventInput,
+  Language,
+  Song,
+  Update,
+} from "../types";
 
 type AppState = {
   storageReady: boolean;
+  cloudConfigured: boolean;
+  cloudConnected: boolean;
   onboardingComplete: boolean;
   language: Language;
   t: Copy;
   songs: Song[];
   updates: Update[];
+  events: CalendarEvent[];
+  eventT: (typeof eventTranslations)[Language];
   registered: boolean;
   isAdmin: boolean;
   setLanguage: (language: Language) => void;
@@ -31,19 +58,24 @@ type AppState = {
   replayWelcome: () => void;
   uploadSong: () => Promise<void>;
   register: () => void;
-  authenticateAdmin: () => void;
-  leaveAdmin: () => void;
-  publishUpdate: (title: string, body: string) => void;
+  authenticateAdmin: (email: string, password: string) => Promise<void>;
+  leaveAdmin: () => Promise<void>;
+  publishUpdate: (title: string, body: string) => Promise<void>;
+  createCalendarEvent: (input: CalendarEventInput) => Promise<void>;
+  deleteCalendarEvent: (id: string) => Promise<void>;
+  deleteCalendarYear: (year: number) => Promise<void>;
 };
 
 const Context = createContext<AppState | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [storageReady, setStorageReady] = useState(false);
+  const [cloudConnected, setCloudConnected] = useState(false);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [language, setLanguageState] = useState<Language>("en");
   const [songs, setSongs] = useState<Song[]>(initialSongs);
   const [updates, setUpdates] = useState<Update[]>(initialUpdates);
+  const [events, setEvents] = useState<CalendarEvent[]>(initialCalendarEvents);
   const [registered, setRegistered] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -54,6 +86,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           "language",
           "songs",
           "updates",
+          "calendarEvents",
           "registered",
           "admin",
           "onboardingComplete",
@@ -62,14 +95,39 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (values.language) setLanguageState(values.language as Language);
         if (values.songs) setSongs(JSON.parse(values.songs));
         if (values.updates) setUpdates(JSON.parse(values.updates));
+        if (values.calendarEvents)
+          setEvents(JSON.parse(values.calendarEvents));
         setRegistered(values.registered === "true");
-        setIsAdmin(values.admin === "true");
         setOnboardingComplete(values.onboardingComplete === "true");
       } catch {
       } finally {
         setStorageReady(true);
       }
     })();
+  }, []);
+
+  useEffect(() => {
+    if (!firebaseConfigured) return;
+    const fail = (error: Error) => {
+      setCloudConnected(false);
+      console.warn("Firebase sync failed", error);
+    };
+    const stopEvents = subscribeToCalendarEvents((sharedEvents) => {
+      setEvents(sharedEvents);
+      setCloudConnected(true);
+      void AsyncStorage.setItem("calendarEvents", JSON.stringify(sharedEvents));
+    }, fail);
+    const stopUpdates = subscribeToUpdates((sharedUpdates) => {
+      setUpdates(sharedUpdates);
+      setCloudConnected(true);
+      void AsyncStorage.setItem("updates", JSON.stringify(sharedUpdates));
+    }, fail);
+    const stopAdmin = subscribeToAdmin(setIsAdmin);
+    return () => {
+      stopEvents();
+      stopUpdates();
+      stopAdmin();
+    };
   }, []);
 
   const setLanguage = (value: Language) => {
@@ -93,47 +151,66 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     AsyncStorage.setItem("registered", "true");
     Alert.alert("Swamiye Saranam Ayyappa", "Registration completed.");
   };
-  const authenticateAdmin = () => {
+  const authenticateAdmin = async (email: string, password: string) => {
+    await signInAdmin(email, password);
     setIsAdmin(true);
-    AsyncStorage.setItem("admin", "true");
   };
-  const leaveAdmin = () => {
+  const leaveAdmin = async () => {
+    await signOutAdmin();
     setIsAdmin(false);
-    AsyncStorage.setItem("admin", "false");
   };
-  const publishUpdate = (title: string, body: string) => {
-    const next = [
-      { id: String(Date.now()), title, body, date: "Today", pinned: true },
-      ...updates,
-    ];
-    setUpdates(next);
-    AsyncStorage.setItem("updates", JSON.stringify(next));
+  const publishUpdate = async (title: string, body: string) => {
+    await addTempleUpdate(title, body);
     Alert.alert("Update published");
+  };
+  const createCalendarEvent = async (input: CalendarEventInput) => {
+    const id = await addCalendarEvent(input);
+    await scheduleEventReminders(
+      { ...input, id, createdAt: new Date().toISOString() } as CalendarEvent,
+      language,
+    );
+  };
+  const deleteCalendarEvent = async (id: string) => {
+    const event = events.find((item) => item.id === id);
+    await cancelEventReminders(event?.notificationIds);
+    await removeCalendarEvent(id);
+  };
+  const deleteCalendarYear = async (year: number) => {
+    const removed = events.filter(
+      (event) => Number(event.date.slice(0, 4)) === year,
+    );
+    await Promise.all(
+      removed.map((event) => cancelEventReminders(event.notificationIds)),
+    );
+    await removeCalendarYear(year);
   };
   const uploadSong = async () => {
     const result = await DocumentPicker.getDocumentAsync({
       type: [
         "application/pdf",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "text/*",
-        "audio/*",
+        "application/msword",
       ],
       copyToCacheDirectory: true,
+      multiple: false,
     });
     if (result.canceled) return;
     const file = result.assets[0];
     if (!file) return;
     const lowerName = file.name.toLowerCase();
-    const kind: Song["type"] =
+    const kind: Song["type"] | null =
       lowerName.endsWith(".pdf") || file.mimeType?.includes("pdf")
         ? "PDF"
         : lowerName.endsWith(".docx") ||
             file.mimeType?.includes("officedocument.wordprocessingml.document")
           ? "DOCX"
-          : file.mimeType?.startsWith("audio")
-            ? "AUDIO"
-            : "TXT";
+          : lowerName.endsWith(".doc") || file.mimeType === "application/msword"
+            ? "DOC"
+            : null;
     try {
+      if (!kind) {
+        throw new Error("Choose a PDF, DOCX or DOC document.");
+      }
       if (!FileSystem.documentDirectory)
         throw new Error("App storage is unavailable.");
       const id = String(Date.now());
@@ -155,7 +232,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await AsyncStorage.setItem("songs", JSON.stringify(next));
       Alert.alert(
         "Added to sacred library",
-        `${file.name}\n\nTap it to read inside the app.`,
+        kind === "DOC"
+          ? `${file.name}\n\nThe document is now listed under Songs. Legacy DOC files open through a compatible document app on the device.`
+          : `${file.name}\n\nIt is now available under Songs and saved on this device.`,
       );
     } catch (reason) {
       Alert.alert(
@@ -168,11 +247,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<AppState>(
     () => ({
       storageReady,
+      cloudConfigured: firebaseConfigured,
+      cloudConnected,
       onboardingComplete,
       language,
       t: translations[language],
       songs,
       updates,
+      events,
+      eventT: eventTranslations[language],
       registered,
       isAdmin,
       setLanguage,
@@ -183,13 +266,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       authenticateAdmin,
       leaveAdmin,
       publishUpdate,
+      createCalendarEvent,
+      deleteCalendarEvent,
+      deleteCalendarYear,
     }),
     [
       storageReady,
+      cloudConnected,
       onboardingComplete,
       language,
       songs,
       updates,
+      events,
       registered,
       isAdmin,
     ],
