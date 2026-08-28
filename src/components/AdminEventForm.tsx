@@ -1,15 +1,17 @@
 import React, { useState } from "react";
 import {
   Alert,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { TEMPLE } from "../data/content";
 import { useApp } from "../state/AppContext";
-import type { Language, LocalizedText } from "../types";
+import type { CalendarEvent, Language, LocalizedText } from "../types";
 import { colors } from "../theme";
 import { GoldButton, Icon } from "./UI";
 
@@ -21,6 +23,33 @@ function defaultDate() {
   const date = new Date();
   date.setDate(date.getDate() + 1);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function dateFromIso(value: string) {
+  const parts = value.split("-").map(Number);
+  const parsed = new Date(
+    parts[0] ?? new Date().getFullYear(),
+    (parts[1] || 1) - 1,
+    parts[2] || 1,
+    12,
+  );
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+}
+
+function dateToIso(value: Date) {
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+}
+
+function formattedDate(value: string, language: Language) {
+  const locale = { en: "en-US", te: "te-IN", ta: "ta-IN", kn: "kn-IN" }[
+    language
+  ];
+  return new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(dateFromIso(value));
 }
 
 function fillTranslations(
@@ -38,26 +67,38 @@ function fillTranslations(
 
 export function AdminEventForm({
   kind,
+  initialEvent,
   onSaved,
 }: {
   kind: "temple" | "padiPuja";
+  initialEvent?: CalendarEvent;
   onSaved: () => void;
 }) {
-  const { eventT, language, createCalendarEvent } = useApp();
-  const [title, setTitle] = useState<LocalizedText>(blankLocalized);
-  const [description, setDescription] =
-    useState<LocalizedText>(blankLocalized);
-  const [date, setDate] = useState(defaultDate);
-  const [startTime, setStartTime] = useState("18:30");
-  const [endTime, setEndTime] = useState("20:00");
-  const [venue, setVenue] = useState(
-    kind === "temple" ? TEMPLE.shortAddress : "",
+  const { eventT, language, createCalendarEvent, editCalendarEvent } = useApp();
+  const [title, setTitle] = useState<LocalizedText>(() =>
+    initialEvent ? { ...initialEvent.title } : blankLocalized(),
   );
-  const [contactName, setContactName] = useState("");
-  const [contactPhone, setContactPhone] = useState("");
-  const [devoteeName, setDevoteeName] = useState("");
-  const [familyName, setFamilyName] = useState("");
-  const [remindersEnabled, setRemindersEnabled] = useState(true);
+  const [description, setDescription] = useState<LocalizedText>(() =>
+    initialEvent ? { ...initialEvent.description } : blankLocalized(),
+  );
+  const [date, setDate] = useState(() => initialEvent?.date ?? defaultDate());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [startTime, setStartTime] = useState(initialEvent?.startTime ?? "18:30");
+  const [endTime, setEndTime] = useState(initialEvent?.endTime ?? "20:00");
+  const [venue, setVenue] = useState(
+    initialEvent?.venue ?? (kind === "temple" ? TEMPLE.shortAddress : ""),
+  );
+  const [contactName, setContactName] = useState(initialEvent?.contactName ?? "");
+  const [contactPhone, setContactPhone] = useState(initialEvent?.contactPhone ?? "");
+  const [devoteeName, setDevoteeName] = useState(
+    initialEvent?.kind === "padiPuja" ? initialEvent.devoteeName : "",
+  );
+  const [familyName, setFamilyName] = useState(
+    initialEvent?.kind === "padiPuja" ? initialEvent.familyName ?? "" : "",
+  );
+  const [remindersEnabled, setRemindersEnabled] = useState(
+    initialEvent?.remindersEnabled ?? true,
+  );
   const [saving, setSaving] = useState(false);
 
   const updateLocalized = (
@@ -102,16 +143,20 @@ export function AdminEventForm({
         remindersEnabled,
       };
       if (kind === "temple") {
-        await createCalendarEvent({ ...common, kind: "temple" });
+        const input = { ...common, kind: "temple" } as const;
+        if (initialEvent) await editCalendarEvent(initialEvent.id, input);
+        else await createCalendarEvent(input);
       } else {
-        await createCalendarEvent({
+        const input = {
           ...common,
           kind: "padiPuja",
           devoteeName: devoteeName.trim(),
           familyName: familyName.trim() || undefined,
-        });
+        } as const;
+        if (initialEvent) await editCalendarEvent(initialEvent.id, input);
+        else await createCalendarEvent(input);
       }
-      Alert.alert(eventT.saved);
+      Alert.alert(initialEvent ? eventT.updated : eventT.saved);
       onSaved();
     } catch (reason) {
       Alert.alert(
@@ -141,7 +186,53 @@ export function AdminEventForm({
         <Icon name="calendar" color={colors.gold} />
         <Text style={s.sectionTitle}>{eventT.upcoming}</Text>
       </View>
-      <Field label={eventT.date} value={date} onChange={setDate} />
+      <Text style={s.label}>{eventT.date}</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${eventT.date}: ${formattedDate(date, language)}`}
+        style={[s.dateButton, showDatePicker && s.dateButtonActive]}
+        onPress={() => setShowDatePicker((current) => !current)}
+      >
+        <View style={s.dateIcon}>
+          <Icon name="calendar-outline" color={colors.gold} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={s.dateValue}>{formattedDate(date, language)}</Text>
+          <Text style={s.dateIso}>{date}</Text>
+        </View>
+        <Icon
+          name={showDatePicker ? "chevron-up" : "chevron-down"}
+          color={colors.gold}
+          size={18}
+        />
+      </Pressable>
+      {showDatePicker ? (
+        <View style={s.calendarCard}>
+          <DateTimePicker
+            value={dateFromIso(date)}
+            mode="date"
+            display={Platform.OS === "ios" ? "inline" : "calendar"}
+            minimumDate={new Date(new Date().setHours(0, 0, 0, 0))}
+            themeVariant="dark"
+            accentColor={colors.gold}
+            onChange={(event, selectedDate) => {
+              if (Platform.OS === "android") setShowDatePicker(false);
+              if (event.type === "set" && selectedDate) {
+                setDate(dateToIso(selectedDate));
+              }
+            }}
+          />
+          {Platform.OS === "ios" ? (
+            <Pressable
+              accessibilityRole="button"
+              style={s.calendarDone}
+              onPress={() => setShowDatePicker(false)}
+            >
+              <Text style={s.calendarDoneText}>Done</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
       <View style={s.timeRow}>
         <View style={{ flex: 1 }}>
           <Field
@@ -210,7 +301,9 @@ export function AdminEventForm({
         label={
           saving
             ? "Saving…"
-            : kind === "temple"
+            : initialEvent
+              ? eventT.updateEvent
+              : kind === "temple"
               ? eventT.saveEvent
               : eventT.savePadiPuja
         }
@@ -290,6 +383,46 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     fontSize: 14,
   },
+  dateButton: {
+    minHeight: 66,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+  },
+  dateButtonActive: { borderColor: "rgba(233,185,73,.65)" },
+  dateIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(233,185,73,.1)",
+  },
+  dateValue: { color: colors.cream, fontSize: 13, fontWeight: "800" },
+  dateIso: { color: colors.muted, fontSize: 9, marginTop: 3 },
+  calendarCard: {
+    marginTop: 8,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: "#17140E",
+    padding: 8,
+    overflow: "hidden",
+  },
+  calendarDone: {
+    minHeight: 42,
+    borderRadius: 12,
+    backgroundColor: colors.gold,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 4,
+  },
+  calendarDoneText: { color: colors.ink, fontSize: 12, fontWeight: "900" },
   multiline: { minHeight: 100, paddingTop: 13, textAlignVertical: "top" },
   timeRow: { flexDirection: "row", gap: 10 },
   reminder: {

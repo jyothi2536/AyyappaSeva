@@ -7,18 +7,23 @@ import type { RootStackParamList } from "../types";
 
 export default function AdminTempleEventScreen({
   navigation,
+  route,
 }: NativeStackScreenProps<RootStackParamList, "AdminTempleEvent">) {
-  const { eventT } = useApp();
+  const { eventT, events } = useApp();
+  const initialEvent = events.find(
+    (event) => event.id === route.params?.eventId && event.kind === "temple",
+  );
   return (
     <Page>
       <BackButton navigation={navigation} />
       <ScreenHeader
         eyebrow={eventT.templeEvent}
-        title={eventT.createTempleEvent}
+        title={initialEvent ? eventT.editEvent : eventT.createTempleEvent}
         subtitle={eventT.translationHelp}
       />
       <AdminEventForm
         kind="temple"
+        initialEvent={initialEvent}
         onSaved={() => navigation.replace("AdminCalendar")}
       />
     </Page>

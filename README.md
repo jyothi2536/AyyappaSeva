@@ -25,7 +25,23 @@ Admin setup:
 2. Create the administrator under Authentication → Users.
 3. Copy that user's UID.
 4. Create Firestore document `admins/{uid}` with a field such as `role: "admin"`.
-5. Use that email and password on the app's Admin screen.
+5. For username login, create the Firebase Auth user with an internal email in
+   the form `<username>@admin.ayyappaseva.app`. The app converts the entered
+   username to this internal email; it never displays the email to staff.
+6. Add `username`, `displayName`, and `role` fields to `admins/{uid}`. Valid
+   roles are `admin` and `superAdmin`. Keep exactly one `superAdmin` document.
+7. Deploy `firestore.rules`. A super administrator can list administrators and
+   delete a normal administrator's Firestore access document. This immediately
+   blocks admin access without exposing Firebase credentials in the app.
+
+Demo account convention:
+
+- `admin` authenticates internally as `admin@admin.ayyappaseva.app` and uses
+  the `admin` Firestore role.
+- `shabarish` authenticates internally as `shabarish@admin.ayyappaseva.app`
+  and uses the `superAdmin` Firestore role.
+- Passwords exist only in Firebase Authentication and must never be committed
+  to this repository.
 
 ## Included
 

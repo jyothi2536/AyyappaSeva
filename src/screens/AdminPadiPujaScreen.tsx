@@ -7,18 +7,23 @@ import type { RootStackParamList } from "../types";
 
 export default function AdminPadiPujaScreen({
   navigation,
+  route,
 }: NativeStackScreenProps<RootStackParamList, "AdminPadiPuja">) {
-  const { eventT } = useApp();
+  const { eventT, events } = useApp();
+  const initialEvent = events.find(
+    (event) => event.id === route.params?.eventId && event.kind === "padiPuja",
+  );
   return (
     <Page>
       <BackButton navigation={navigation} />
       <ScreenHeader
         eyebrow={eventT.padiPuja}
-        title={eventT.createPadiPuja}
+        title={initialEvent ? eventT.editEvent : eventT.createPadiPuja}
         subtitle={eventT.translationHelp}
       />
       <AdminEventForm
         kind="padiPuja"
+        initialEvent={initialEvent}
         onSaved={() => navigation.replace("AdminCalendar")}
       />
     </Page>

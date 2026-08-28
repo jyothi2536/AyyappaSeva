@@ -16,7 +16,8 @@ import {
   ScreenHeader,
 } from "../components/UI";
 import { useApp } from "../state/AppContext";
-import type { RootStackParamList } from "../types";
+import { formatEventDate, localize } from "../data/events";
+import type { CalendarEvent, RootStackParamList } from "../types";
 import { colors } from "../theme";
 
 export default function AdminScreen({
@@ -25,27 +26,33 @@ export default function AdminScreen({
   const {
     t,
     eventT,
+    events,
+    language,
     isAdmin,
+    adminSession,
+    adminAccounts,
     cloudConfigured,
     cloudConnected,
     authenticateAdmin,
     leaveAdmin,
+    deleteAdminAccount,
     publishUpdate,
     uploadSong,
+    deleteCalendarEvent,
   } = useApp();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("");
   const [signingIn, setSigningIn] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const auth = async () => {
-    if (!email.trim() || !password) {
-      Alert.alert("Enter the administrator email and password.");
+    if (!username.trim() || !password) {
+      Alert.alert("Enter the administrator username and password.");
       return;
     }
     setSigningIn(true);
     try {
-      await authenticateAdmin(email.trim(), password);
+      await authenticateAdmin(username.trim(), password);
     } catch (reason) {
       Alert.alert(
         "Unable to sign in",
@@ -54,6 +61,27 @@ export default function AdminScreen({
     } finally {
       setSigningIn(false);
     }
+  };
+  const confirmDeleteAdmin = (uid: string, displayName: string) => {
+    Alert.alert(
+      "Delete administrator?",
+      `${displayName} will immediately lose access to the admin section.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            void deleteAdminAccount(uid).catch((reason) => {
+              Alert.alert(
+                "Unable to delete administrator",
+                reason instanceof Error ? reason.message : "Please try again.",
+              );
+            });
+          },
+        },
+      ],
+    );
   };
   const publish = async () => {
     if (!title.trim() || !body.trim())
@@ -68,6 +96,37 @@ export default function AdminScreen({
       );
     }
   };
+  const editEvent = (event: CalendarEvent) => {
+    if (event.kind === "temple") {
+      navigation.navigate("AdminTempleEvent", { eventId: event.id });
+    } else {
+      navigation.navigate("AdminPadiPuja", { eventId: event.id });
+    }
+  };
+  const confirmDeleteEvent = (event: CalendarEvent) => {
+    Alert.alert(
+      localize(event.title, language),
+      "Delete this event for all users?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            void deleteCalendarEvent(event.id).catch((reason) => {
+              Alert.alert(
+                "Unable to delete event",
+                reason instanceof Error ? reason.message : "Please try again.",
+              );
+            });
+          },
+        },
+      ],
+    );
+  };
+  const scheduledEvents = [...events].sort((a, b) =>
+    `${a.date}T${a.startTime}`.localeCompare(`${b.date}T${b.startTime}`),
+  );
   return (
     <Page>
       <BackButton navigation={navigation} label={t.profile} />
@@ -99,12 +158,15 @@ export default function AdminScreen({
               committee.
             </Text>
           </View>
-          <Label text="Administrator email" />
+          <Label text="Administrator username" />
           <TextInput
-            value={email}
-            onChangeText={setEmail}
+            value={username}
+            onChangeText={setUsername}
             autoCapitalize="none"
-            keyboardType="email-address"
+            autoCorrect={false}
+            textContentType="username"
+            placeholder="Username"
+            placeholderTextColor="#6F6A59"
             style={s.input}
           />
           <Label text="Password" />
@@ -112,6 +174,7 @@ export default function AdminScreen({
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            textContentType="password"
             style={s.input}
           />
           <GoldButton
@@ -123,9 +186,54 @@ export default function AdminScreen({
       ) : (
         <>
           <View style={s.ready}>
-            <Icon name="checkmark-circle" color="#91BE91" />
-            <Text style={s.readyText}>Verified temple administrator</Text>
+            <Icon
+              name={adminSession?.role === "superAdmin" ? "shield-checkmark" : "checkmark-circle"}
+              color="#91BE91"
+            />
+            <View style={{ flex: 1 }}>
+              <Text style={s.readyText}>
+                {adminSession?.role === "superAdmin"
+                  ? "Verified super administrator"
+                  : "Verified temple administrator"}
+              </Text>
+              {adminSession ? (
+                <Text style={s.signedInAs}>Signed in as {adminSession.username}</Text>
+              ) : null}
+            </View>
           </View>
+          {adminSession?.role === "superAdmin" ? (
+            <>
+              <Text style={s.section}>Manage administrators</Text>
+              <Text style={s.localNote}>
+                Only the super administrator can remove another administrator's access.
+              </Text>
+              {adminAccounts
+                .filter((account) => account.uid !== adminSession.uid)
+                .map((account) => (
+                  <View key={account.uid} style={s.adminAccount}>
+                    <View style={s.actionIcon}>
+                      <Icon name="person" color={colors.gold} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.actionTitle}>{account.displayName}</Text>
+                      <Text style={s.actionSub}>@{account.username} · Administrator</Text>
+                    </View>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Delete administrator ${account.displayName}`}
+                      hitSlop={10}
+                      onPress={() => confirmDeleteAdmin(account.uid, account.displayName)}
+                      style={s.deleteAdmin}
+                    >
+                      <Icon name="trash-outline" color="#E58A7B" />
+                    </Pressable>
+                  </View>
+                ))}
+              {adminAccounts.filter((account) => account.uid !== adminSession.uid).length === 0 ? (
+                <Text style={s.emptyAdmins}>No other administrator accounts.</Text>
+              ) : null}
+            </>
+          ) : null}
           <Text style={s.section}>{eventT.manageSchedule}</Text>
           <AdminAction
             icon="business"
@@ -142,10 +250,64 @@ export default function AdminScreen({
           <AdminAction
             icon="calendar"
             title={eventT.adminCalendar}
-            subtitle={eventT.calendarSubtitle}
+            subtitle={`${scheduledEvents.length} scheduled · ${eventT.calendarSubtitle}`}
             onPress={() => navigation.navigate("AdminCalendar")}
           />
           <Text style={s.localNote}>{eventT.scheduleNote}</Text>
+          <Text style={s.section}>{eventT.upcoming}</Text>
+          {scheduledEvents.length ? (
+            scheduledEvents.map((event) => (
+              <View key={event.id} style={s.eventCard}>
+                <View
+                  style={[
+                    s.eventDate,
+                    event.kind === "padiPuja" && s.padiPujaDate,
+                  ]}
+                >
+                  <Text style={s.eventDay}>{event.date.slice(8, 10)}</Text>
+                  <Icon
+                    name={event.kind === "temple" ? "business" : "home"}
+                    size={14}
+                    color={colors.ink}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.eventKind}>
+                    {event.kind === "temple" ? eventT.templeEvent : eventT.padiPuja}
+                  </Text>
+                  <Text style={s.eventTitle} numberOfLines={2}>
+                    {localize(event.title, language)}
+                  </Text>
+                  <Text style={s.eventMeta}>
+                    {formatEventDate(event, language)} · {event.startTime}
+                  </Text>
+                </View>
+                <View style={s.eventButtons}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${eventT.editEvent}: ${localize(event.title, language)}`}
+                    onPress={() => editEvent(event)}
+                    style={s.editEvent}
+                  >
+                    <Icon name="create-outline" size={19} color={colors.gold} />
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Delete ${localize(event.title, language)}`}
+                    onPress={() => confirmDeleteEvent(event)}
+                    style={s.deleteEvent}
+                  >
+                    <Icon name="trash-outline" size={19} color="#E58A7B" />
+                  </Pressable>
+                </View>
+              </View>
+            ))
+          ) : (
+            <View style={s.noEvents}>
+              <Icon name="calendar-clear-outline" color={colors.gold} />
+              <Text style={s.noEventsText}>{eventT.noEvents}</Text>
+            </View>
+          )}
           <Text style={s.section}>{eventT.announcements}</Text>
           <Label text={t.title} />
           <TextInput value={title} onChangeText={setTitle} style={s.input} />
@@ -277,6 +439,7 @@ const s = StyleSheet.create({
     marginBottom: 20,
   },
   readyText: { color: "#A6C6A4", fontSize: 12, fontWeight: "700" },
+  signedInAs: { color: colors.muted, fontSize: 9, marginTop: 3 },
   section: {
     color: colors.cream,
     fontSize: 18,
@@ -306,6 +469,94 @@ const s = StyleSheet.create({
   },
   actionTitle: { color: colors.cream, fontSize: 13, fontWeight: "800" },
   actionSub: { color: colors.muted, fontSize: 9, lineHeight: 14, marginTop: 3 },
+  adminAccount: {
+    minHeight: 68,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.surface,
+    padding: 11,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+    marginBottom: 9,
+  },
+  deleteAdmin: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(229,138,123,.1)",
+  },
+  emptyAdmins: {
+    color: colors.muted,
+    fontSize: 11,
+    textAlign: "center",
+    paddingVertical: 16,
+    marginBottom: 10,
+  },
+  eventCard: {
+    minHeight: 82,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.surface,
+    padding: 11,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+    marginBottom: 9,
+  },
+  eventDate: {
+    width: 46,
+    height: 58,
+    borderRadius: 14,
+    backgroundColor: colors.gold,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+  },
+  padiPujaDate: { backgroundColor: "#87AC87" },
+  eventDay: { color: colors.ink, fontSize: 17, fontWeight: "900" },
+  eventKind: {
+    color: colors.gold,
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 0.8,
+  },
+  eventTitle: { color: colors.cream, fontSize: 13, fontWeight: "800", marginTop: 3 },
+  eventMeta: { color: colors.muted, fontSize: 9, marginTop: 4 },
+  eventButtons: { gap: 5 },
+  editEvent: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: "rgba(233,185,73,.1)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deleteEvent: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: "rgba(229,138,123,.1)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  noEvents: {
+    minHeight: 72,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.surface,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+    marginBottom: 12,
+  },
+  noEventsText: { color: colors.muted, fontSize: 11 },
   localNote: { color: "#7D7662", fontSize: 9, lineHeight: 14, marginBottom: 16 },
   documentCard: {
     minHeight: 82,

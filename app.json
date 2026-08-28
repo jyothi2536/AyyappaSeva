@@ -29,7 +29,8 @@
           "color": "#E9B949",
           "defaultChannel": "event-reminders"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "ios": {
       "supportsTablet": true,

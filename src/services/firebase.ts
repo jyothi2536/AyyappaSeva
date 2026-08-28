@@ -20,12 +20,20 @@ import {
   onSnapshot,
   query,
   serverTimestamp,
+  updateDoc,
   where,
   writeBatch,
   type DocumentData,
   type Unsubscribe,
 } from "firebase/firestore";
-import type { CalendarEvent, CalendarEventInput, Update } from "../types";
+import type {
+  AdminAccount,
+  AdminRole,
+  AdminSession,
+  CalendarEvent,
+  CalendarEventInput,
+  Update,
+} from "../types";
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -131,6 +139,24 @@ export async function addCalendarEvent(input: CalendarEventInput) {
   return reference.id;
 }
 
+export async function updateCalendarEvent(
+  id: string,
+  input: CalendarEventInput,
+) {
+  await updateDoc(doc(requireDb(), "events", id), {
+    ...input,
+    year: Number(input.date.slice(0, 4)),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function setCalendarEventNotificationIds(
+  id: string,
+  notificationIds: string[],
+) {
+  await updateDoc(doc(requireDb(), "events", id), { notificationIds });
+}
+
 export async function removeCalendarEvent(id: string) {
   await deleteDoc(doc(requireDb(), "events", id));
 }
@@ -174,29 +200,108 @@ export async function addTempleUpdate(title: string, body: string) {
   });
 }
 
-async function isApprovedAdmin(uid: string) {
-  return (await getDoc(doc(requireDb(), "admins", uid))).exists();
+function usernameToFirebaseEmail(username: string) {
+  const normalized = username.trim().toLowerCase();
+  if (normalized.includes("@")) return normalized;
+  if (!/^[a-z0-9._-]{3,40}$/.test(normalized)) {
+    throw new Error(
+      "Use 3–40 letters, numbers, dots, underscores or hyphens for the username.",
+    );
+  }
+  return `${normalized}@admin.ayyappaseva.app`;
 }
 
-export function subscribeToAdmin(receive: (isAdmin: boolean) => void) {
+function adminFromDoc(uid: string, value: DocumentData): AdminSession | null {
+  // Older approved administrator documents did not contain an explicit role.
+  // Because only the Firebase console can create these documents, keep them
+  // working as normal admins while reserving super-admin access for the exact
+  // role value below.
+  const role: AdminRole = value.role === "superAdmin" ? "superAdmin" : "admin";
+  return {
+    uid,
+    username: String(value.username || value.email || uid),
+    displayName: String(value.displayName || value.username || "Administrator"),
+    role,
+  };
+}
+
+export function subscribeToAdmin(
+  receive: (session: AdminSession | null) => void,
+) {
   if (!auth) {
-    receive(false);
+    receive(null);
     return () => undefined;
   }
-  return onAuthStateChanged(auth, async (user) => {
-    receive(user ? await isApprovedAdmin(user.uid).catch(() => false) : false);
+  let stopAdminDocument: Unsubscribe | undefined;
+  const stopAuth = onAuthStateChanged(auth, (user) => {
+    stopAdminDocument?.();
+    stopAdminDocument = undefined;
+    if (!user) {
+      receive(null);
+      return;
+    }
+    stopAdminDocument = onSnapshot(
+      doc(requireDb(), "admins", user.uid),
+      (snapshot) => {
+        receive(snapshot.exists() ? adminFromDoc(user.uid, snapshot.data()) : null);
+      },
+      () => receive(null),
+    );
   });
+  return () => {
+    stopAdminDocument?.();
+    stopAuth();
+  };
 }
 
-export async function signInAdmin(email: string, password: string) {
+export async function signInAdmin(username: string, password: string) {
   const instance = requireAuth();
-  const credential = await signInWithEmailAndPassword(instance, email, password);
-  if (!(await isApprovedAdmin(credential.user.uid))) {
+  const credential = await signInWithEmailAndPassword(
+    instance,
+    usernameToFirebaseEmail(username),
+    password,
+  );
+  const adminDocument = await getDoc(
+    doc(requireDb(), "admins", credential.user.uid),
+  );
+  const approved = adminDocument.exists()
+    ? adminFromDoc(credential.user.uid, adminDocument.data())
+    : null;
+  if (!approved) {
     await signOut(instance);
     throw new Error("This account is not approved as a temple administrator.");
   }
+  return approved;
 }
 
 export async function signOutAdmin() {
   await signOut(requireAuth());
+}
+
+export function subscribeToAdminAccounts(
+  receive: (accounts: AdminAccount[]) => void,
+  fail: (error: Error) => void,
+) {
+  if (!db) return () => undefined;
+  return onSnapshot(
+    collection(db, "admins"),
+    (snapshot) => {
+      receive(
+        snapshot.docs
+          .map((item) => adminFromDoc(item.id, item.data()))
+          .filter((item): item is AdminAccount => Boolean(item))
+          .sort((a, b) => a.displayName.localeCompare(b.displayName)),
+      );
+    },
+    fail,
+  );
+}
+
+export async function revokeAdminAccess(uid: string) {
+  const currentUser = requireAuth().currentUser;
+  if (!currentUser) throw new Error("Sign in again to continue.");
+  if (uid === currentUser.uid) {
+    throw new Error("The super administrator cannot delete their own account.");
+  }
+  await deleteDoc(doc(requireDb(), "admins", uid));
 }

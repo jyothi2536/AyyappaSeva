@@ -63,6 +63,14 @@ export default function AdminCalendarScreen({
       },
     ]);
 
+  const editEvent = (event: CalendarEvent) => {
+    if (event.kind === "temple") {
+      navigation.navigate("AdminTempleEvent", { eventId: event.id });
+    } else {
+      navigation.navigate("AdminPadiPuja", { eventId: event.id });
+    }
+  };
+
   return (
     <Page>
       <BackButton navigation={navigation} />
@@ -130,14 +138,26 @@ export default function AdminCalendarScreen({
                   </Text>
                 ) : null}
               </View>
-              <Pressable
-                accessibilityRole="button"
-                hitSlop={12}
-                onPress={() => removeEvent(event)}
-                style={s.trash}
-              >
-                <Icon name="trash-outline" size={19} color="#D47D72" />
-              </Pressable>
+              <View style={s.cardActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${eventT.editEvent}: ${localize(event.title, language)}`}
+                  hitSlop={8}
+                  onPress={() => editEvent(event)}
+                  style={s.edit}
+                >
+                  <Icon name="create-outline" size={19} color={colors.gold} />
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Delete ${localize(event.title, language)}`}
+                  hitSlop={8}
+                  onPress={() => removeEvent(event)}
+                  style={s.trash}
+                >
+                  <Icon name="trash-outline" size={19} color="#D47D72" />
+                </Pressable>
+              </View>
             </View>
           ))}
         </View>
@@ -242,7 +262,23 @@ const s = StyleSheet.create({
   title: { color: colors.cream, fontSize: 14, fontWeight: "800", marginTop: 3 },
   meta: { color: colors.muted, fontSize: 10, lineHeight: 15, marginTop: 3 },
   host: { color: "#A8C4A5", fontSize: 10, marginTop: 4 },
-  trash: { width: 32, height: 32, alignItems: "center", justifyContent: "center" },
+  cardActions: { gap: 5 },
+  edit: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: "rgba(233,185,73,.1)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  trash: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: "rgba(212,125,114,.1)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   empty: { alignItems: "center", paddingVertical: 45 },
   emptyText: { color: colors.muted, marginTop: 10 },
   deleteYear: {

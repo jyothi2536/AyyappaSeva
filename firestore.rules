@@ -4,7 +4,12 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function isAdmin() {
       return request.auth != null
-        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['admin', 'superAdmin'];
+    }
+
+    function isSuperAdmin() {
+      return request.auth != null
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'superAdmin';
     }
 
     match /events/{eventId} {
@@ -18,8 +23,13 @@ service cloud.firestore {
     }
 
     match /admins/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if false;
+      allow get: if request.auth != null
+        && (request.auth.uid == userId || isSuperAdmin());
+      allow list: if isSuperAdmin();
+      allow delete: if isSuperAdmin()
+        && request.auth.uid != userId
+        && resource.data.role == 'admin';
+      allow create, update: if false;
     }
   }
 }

@@ -618,4 +618,4 @@ export const wallpapers = [
     accent: "#E6782F",
   },
 ] as const satisfies readonly Wallpaper[];
-export const homeTempleImage = require("../../assets/temple/ayyappa-dark-sanctum-original.jpg");
+export const homeTempleImage = require("../../assets/temple/ayyappa-home-original-v2.png");

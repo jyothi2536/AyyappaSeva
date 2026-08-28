@@ -26,13 +26,19 @@ import {
   firebaseConfigured,
   removeCalendarEvent,
   removeCalendarYear,
+  revokeAdminAccess,
+  setCalendarEventNotificationIds,
   signInAdmin,
   signOutAdmin,
   subscribeToAdmin,
+  subscribeToAdminAccounts,
   subscribeToCalendarEvents,
   subscribeToUpdates,
+  updateCalendarEvent,
 } from "../services/firebase";
 import type {
+  AdminAccount,
+  AdminSession,
   CalendarEvent,
   CalendarEventInput,
   Language,
@@ -53,15 +59,19 @@ type AppState = {
   eventT: (typeof eventTranslations)[Language];
   registered: boolean;
   isAdmin: boolean;
+  adminSession: AdminSession | null;
+  adminAccounts: AdminAccount[];
   setLanguage: (language: Language) => void;
   finishOnboarding: (language: Language) => Promise<void>;
   replayWelcome: () => void;
   uploadSong: () => Promise<void>;
   register: () => void;
-  authenticateAdmin: (email: string, password: string) => Promise<void>;
+  authenticateAdmin: (username: string, password: string) => Promise<void>;
   leaveAdmin: () => Promise<void>;
+  deleteAdminAccount: (uid: string) => Promise<void>;
   publishUpdate: (title: string, body: string) => Promise<void>;
   createCalendarEvent: (input: CalendarEventInput) => Promise<void>;
+  editCalendarEvent: (id: string, input: CalendarEventInput) => Promise<void>;
   deleteCalendarEvent: (id: string) => Promise<void>;
   deleteCalendarYear: (year: number) => Promise<void>;
 };
@@ -78,6 +88,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [events, setEvents] = useState<CalendarEvent[]>(initialCalendarEvents);
   const [registered, setRegistered] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminSession, setAdminSession] = useState<AdminSession | null>(null);
+  const [adminAccounts, setAdminAccounts] = useState<AdminAccount[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -122,13 +134,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setCloudConnected(true);
       void AsyncStorage.setItem("updates", JSON.stringify(sharedUpdates));
     }, fail);
-    const stopAdmin = subscribeToAdmin(setIsAdmin);
+    const stopAdmin = subscribeToAdmin((session) => {
+      setAdminSession(session);
+      setIsAdmin(Boolean(session));
+    });
     return () => {
       stopEvents();
       stopUpdates();
       stopAdmin();
     };
   }, []);
+
+  useEffect(() => {
+    if (!firebaseConfigured || adminSession?.role !== "superAdmin") {
+      setAdminAccounts([]);
+      return;
+    }
+    return subscribeToAdminAccounts(setAdminAccounts, (error) => {
+      console.warn("Unable to load administrator accounts", error);
+      setAdminAccounts([]);
+    });
+  }, [adminSession?.role]);
 
   const setLanguage = (value: Language) => {
     setLanguageState(value);
@@ -151,13 +177,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     AsyncStorage.setItem("registered", "true");
     Alert.alert("Swamiye Saranam Ayyappa", "Registration completed.");
   };
-  const authenticateAdmin = async (email: string, password: string) => {
-    await signInAdmin(email, password);
+  const authenticateAdmin = async (username: string, password: string) => {
+    const session = await signInAdmin(username, password);
+    setAdminSession(session);
     setIsAdmin(true);
   };
   const leaveAdmin = async () => {
     await signOutAdmin();
+    setAdminSession(null);
     setIsAdmin(false);
+  };
+  const deleteAdminAccount = async (uid: string) => {
+    await revokeAdminAccess(uid);
+    Alert.alert("Administrator removed", "The account can no longer access the admin section.");
   };
   const publishUpdate = async (title: string, body: string) => {
     await addTempleUpdate(title, body);
@@ -165,10 +197,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
   const createCalendarEvent = async (input: CalendarEventInput) => {
     const id = await addCalendarEvent(input);
-    await scheduleEventReminders(
+    const notificationIds = await scheduleEventReminders(
       { ...input, id, createdAt: new Date().toISOString() } as CalendarEvent,
       language,
     );
+    if (notificationIds.length) {
+      await setCalendarEventNotificationIds(id, notificationIds);
+    }
+  };
+  const editCalendarEvent = async (id: string, input: CalendarEventInput) => {
+    const existing = events.find((event) => event.id === id);
+    if (!existing) throw new Error("This event is no longer available.");
+    await cancelEventReminders(existing.notificationIds);
+    await updateCalendarEvent(id, input);
+    const notificationIds = await scheduleEventReminders(
+      {
+        ...input,
+        id,
+        createdAt: existing.createdAt,
+      } as CalendarEvent,
+      language,
+    );
+    await setCalendarEventNotificationIds(id, notificationIds);
   };
   const deleteCalendarEvent = async (id: string) => {
     const event = events.find((item) => item.id === id);
@@ -258,6 +308,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       eventT: eventTranslations[language],
       registered,
       isAdmin,
+      adminSession,
+      adminAccounts,
       setLanguage,
       finishOnboarding,
       replayWelcome,
@@ -265,8 +317,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       register,
       authenticateAdmin,
       leaveAdmin,
+      deleteAdminAccount,
       publishUpdate,
       createCalendarEvent,
+      editCalendarEvent,
       deleteCalendarEvent,
       deleteCalendarYear,
     }),
@@ -280,6 +334,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       events,
       registered,
       isAdmin,
+      adminSession,
+      adminAccounts,
     ],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;

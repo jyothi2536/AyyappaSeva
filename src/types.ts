@@ -3,6 +3,15 @@ import type { NavigatorScreenParams } from "@react-navigation/native";
 export type Language = "en" | "te" | "ta" | "kn";
 export type LocalizedText = Record<Language, string>;
 
+export type AdminRole = "admin" | "superAdmin";
+export type AdminSession = {
+  uid: string;
+  username: string;
+  displayName: string;
+  role: AdminRole;
+};
+export type AdminAccount = AdminSession;
+
 export type BaseCalendarEvent = {
   id: string;
   kind: "temple" | "padiPuja";
@@ -84,7 +93,7 @@ export type RootStackParamList = {
   DocumentReader: { document: Song };
   Registration: undefined;
   Admin: undefined;
-  AdminTempleEvent: undefined;
-  AdminPadiPuja: undefined;
+  AdminTempleEvent: { eventId?: string } | undefined;
+  AdminPadiPuja: { eventId?: string } | undefined;
   AdminCalendar: undefined;
 };
