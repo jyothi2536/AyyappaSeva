@@ -91,7 +91,6 @@ export type RootStackParamList = {
   Harivarasanam: undefined;
   Lyrics: { kind: "saranams108" | "deepaaradhana" };
   DocumentReader: { document: Song };
-  Registration: undefined;
   Admin: undefined;
   AdminTempleEvent: { eventId?: string } | undefined;
   AdminPadiPuja: { eventId?: string } | undefined;

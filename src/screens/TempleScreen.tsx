@@ -2,21 +2,20 @@ import React from "react";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { Icon, Page, ScreenHeader } from "../components/UI";
 import { TEMPLE } from "../data/content";
+import { openDestinationMap } from "../services/maps";
 import { useApp } from "../state/AppContext";
 import { colors } from "../theme";
 
 export default function TempleScreen() {
   const { t } = useApp();
-  const map = () =>
-    Linking.openURL(
-      `https://www.google.com/maps/search/?api=1&query=${TEMPLE.latitude},${TEMPLE.longitude}`,
-    );
+  const map = () => openDestinationMap(TEMPLE, "place", t);
+  const directions = () => openDestinationMap(TEMPLE, "directions", t);
   return (
     <Page>
       <ScreenHeader
         eyebrow={t.temple}
         title={TEMPLE.name}
-        subtitle={TEMPLE.fullName}
+        subtitle={TEMPLE.shortAddress}
       />
       <Pressable style={s.map} onPress={map}>
         <View style={s.pin}>
@@ -26,7 +25,7 @@ export default function TempleScreen() {
         <Text style={s.mapSub}>{t.openMap}</Text>
       </Pressable>
       <View style={s.actions}>
-        <Action icon="navigate" label={t.directions} onPress={map} />
+        <Action icon="navigate" label={t.directions} onPress={directions} />
         <Action
           icon="call"
           label={t.call}

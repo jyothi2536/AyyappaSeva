@@ -34,8 +34,8 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.varktraditions.ayyappaseva",
-      "buildNumber": "2"
+      "bundleIdentifier": "com.varktraditions.ayyappaseva.mobile",
+      "buildNumber": "6"
     },
     "android": {
       "versionCode": 2,

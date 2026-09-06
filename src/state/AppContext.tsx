@@ -57,7 +57,6 @@ type AppState = {
   updates: Update[];
   events: CalendarEvent[];
   eventT: (typeof eventTranslations)[Language];
-  registered: boolean;
   isAdmin: boolean;
   adminSession: AdminSession | null;
   adminAccounts: AdminAccount[];
@@ -65,7 +64,6 @@ type AppState = {
   finishOnboarding: (language: Language) => Promise<void>;
   replayWelcome: () => void;
   uploadSong: () => Promise<void>;
-  register: () => void;
   authenticateAdmin: (username: string, password: string) => Promise<void>;
   leaveAdmin: () => Promise<void>;
   deleteAdminAccount: (uid: string) => Promise<void>;
@@ -86,7 +84,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [songs, setSongs] = useState<Song[]>(initialSongs);
   const [updates, setUpdates] = useState<Update[]>(initialUpdates);
   const [events, setEvents] = useState<CalendarEvent[]>(initialCalendarEvents);
-  const [registered, setRegistered] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminSession, setAdminSession] = useState<AdminSession | null>(null);
   const [adminAccounts, setAdminAccounts] = useState<AdminAccount[]>([]);
@@ -99,7 +96,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           "songs",
           "updates",
           "calendarEvents",
-          "registered",
           "admin",
           "onboardingComplete",
         ]);
@@ -109,7 +105,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (values.updates) setUpdates(JSON.parse(values.updates));
         if (values.calendarEvents)
           setEvents(JSON.parse(values.calendarEvents));
-        setRegistered(values.registered === "true");
         setOnboardingComplete(values.onboardingComplete === "true");
       } catch {
       } finally {
@@ -171,11 +166,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const replayWelcome = () => {
     setOnboardingComplete(false);
     AsyncStorage.removeItem("onboardingComplete");
-  };
-  const register = () => {
-    setRegistered(true);
-    AsyncStorage.setItem("registered", "true");
-    Alert.alert("Swamiye Saranam Ayyappa", "Registration completed.");
   };
   const authenticateAdmin = async (username: string, password: string) => {
     const session = await signInAdmin(username, password);
@@ -306,7 +296,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       updates,
       events,
       eventT: eventTranslations[language],
-      registered,
       isAdmin,
       adminSession,
       adminAccounts,
@@ -314,7 +303,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       finishOnboarding,
       replayWelcome,
       uploadSong,
-      register,
       authenticateAdmin,
       leaveAdmin,
       deleteAdminAccount,
@@ -332,7 +320,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       songs,
       updates,
       events,
-      registered,
       isAdmin,
       adminSession,
       adminAccounts,

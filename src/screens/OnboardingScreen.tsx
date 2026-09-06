@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Icon } from "../components/UI";
-import { languages, onboardingCopy, wallpapers } from "../data/content";
+import { languages, onboardingCopy, TEMPLE, wallpapers } from "../data/content";
 import { useApp } from "../state/AppContext";
 import type { Language } from "../types";
 import { colors } from "../theme";
@@ -68,7 +68,9 @@ export default function OnboardingScreen({
     return (
       <LinearGradient colors={["#090906", "#19160F"]} style={s.root}>
         <SafeAreaView style={s.languagePage}>
-          <Text style={s.eyebrow}>AYYAPPA SEVA</Text>
+          <Text accessibilityRole="header" style={s.templeTitle}>
+            {TEMPLE.name}
+          </Text>
           <Text style={s.title}>{copy.choose}</Text>
           <Text style={s.subtitle}>{copy.chooseSub}</Text>
           <View style={s.grid}>
@@ -116,6 +118,12 @@ export default function OnboardingScreen({
           style={StyleSheet.absoluteFill}
         />
         <View style={s.reveal}>
+          <Text
+            accessibilityRole="header"
+            style={[s.templeTitle, s.revealTitle]}
+          >
+            {TEMPLE.name}
+          </Text>
           <Text style={s.mantra}>Swamiye Saranam Ayyappa</Text>
           <Text style={s.subtitle}>
             Welcome to your sacred temple community
@@ -233,12 +241,12 @@ const s = StyleSheet.create({
     gap: 10,
   },
   languagePage: { flex: 1, padding: 24, paddingTop: 70 },
-  eyebrow: {
+  templeTitle: {
     color: colors.gold,
-    fontSize: 10,
-    letterSpacing: 3,
-    fontWeight: "900",
+    fontSize: 22,
+    fontWeight: "800",
   },
+  revealTitle: { textAlign: "center", marginBottom: 12 },
   title: {
     color: colors.cream,
     fontSize: 34,

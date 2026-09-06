@@ -4,6 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Icon, Page, ScreenHeader } from "../components/UI";
 import { languages } from "../data/content";
+import { signOutToHome } from "../navigation/adminLogout";
 import { useApp } from "../state/AppContext";
 import type { RootStackParamList } from "../types";
 import { colors } from "../theme";
@@ -13,7 +14,6 @@ export default function ProfileScreen() {
     t,
     language,
     setLanguage,
-    registered,
     isAdmin,
     leaveAdmin,
     replayWelcome,
@@ -22,30 +22,7 @@ export default function ProfileScreen() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   return (
     <Page>
-      <ScreenHeader
-        eyebrow={t.account}
-        title={registered ? t.registered : t.register}
-      />
-      <View style={s.hero}>
-        <View style={s.avatar}>
-          <Icon name="person" color={colors.gold} size={28} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={s.heroTitle}>
-            {registered ? "Temple devotee" : "Join our devotee family"}
-          </Text>
-          <Text style={s.meta}>Receive important temple announcements.</Text>
-        </View>
-      </View>
-      {!registered && (
-        <Pressable
-          style={s.primary}
-          onPress={() => navigation.navigate("Registration")}
-        >
-          <Icon name="person-add" color={colors.ink} />
-          <Text style={s.primaryText}>{t.register}</Text>
-        </Pressable>
-      )}
+      <ScreenHeader eyebrow={t.account} title={t.profile} />
       <Text style={s.section}>{t.language}</Text>
       <View style={s.grid}>
         {languages.map((item) => {
@@ -82,7 +59,7 @@ export default function ProfileScreen() {
         <Icon name="chevron-forward" color={colors.gold} />
       </Pressable>
       {isAdmin && (
-        <Pressable onPress={leaveAdmin}>
+        <Pressable onPress={() => void signOutToHome(leaveAdmin, navigation)}>
           <Text style={s.signout}>{t.signout}</Text>
         </Pressable>
       )}
@@ -90,37 +67,8 @@ export default function ProfileScreen() {
   );
 }
 const s = StyleSheet.create({
-  hero: {
-    backgroundColor: "#201B11",
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: 17,
-    flexDirection: "row",
-    gap: 13,
-    alignItems: "center",
-  },
-  avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "rgba(233,185,73,.12)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   heroTitle: { color: colors.cream, fontSize: 15, fontWeight: "800" },
   meta: { color: colors.muted, fontSize: 10, lineHeight: 15, marginTop: 4 },
-  primary: {
-    height: 54,
-    borderRadius: 16,
-    backgroundColor: colors.gold,
-    flexDirection: "row",
-    gap: 9,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 12,
-  },
-  primaryText: { color: colors.ink, fontSize: 13, fontWeight: "900" },
   section: {
     color: colors.cream,
     fontSize: 20,

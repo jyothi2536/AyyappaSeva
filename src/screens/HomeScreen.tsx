@@ -38,15 +38,6 @@ export default function HomeScreen() {
           locations={[0, 0.48, 1]}
           style={StyleSheet.absoluteFill}
         />
-        <View style={s.brandRow}>
-          <View>
-            <Text style={s.brandSmall}>AYYAPPA</Text>
-            <Text style={s.brand}>SEVA</Text>
-          </View>
-          <View style={s.bell}>
-            <Icon name="notifications-outline" color={colors.gold} />
-          </View>
-        </View>
         <View style={s.heroCopy}>
           <Text style={s.mantra}>{t.greeting}</Text>
           <Text style={s.heroSub}>{t.welcome}</Text>
@@ -130,35 +121,9 @@ const s = StyleSheet.create({
   content: { paddingBottom: 30 },
   hero: {
     height: Math.min(Dimensions.get("window").height * 0.64, 560),
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
   },
   heroImage: { resizeMode: "cover" },
-  brandRow: {
-    paddingTop: 46,
-    paddingHorizontal: 20,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  brandSmall: {
-    color: colors.gold,
-    fontSize: 9,
-    letterSpacing: 5,
-    fontWeight: "700",
-  },
-  brand: {
-    color: colors.cream,
-    fontSize: 19,
-    letterSpacing: 7,
-    fontWeight: "300",
-  },
-  bell: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(0,0,0,.45)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   heroCopy: { alignItems: "center", padding: 24 },
   mantra: {
     color: colors.cream,

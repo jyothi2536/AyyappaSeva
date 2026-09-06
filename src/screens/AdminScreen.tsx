@@ -17,6 +17,7 @@ import {
 } from "../components/UI";
 import { useApp } from "../state/AppContext";
 import { formatEventDate, localize } from "../data/events";
+import { signOutToHome } from "../navigation/adminLogout";
 import type { CalendarEvent, RootStackParamList } from "../types";
 import { colors } from "../theme";
 
@@ -56,7 +57,9 @@ export default function AdminScreen({
     } catch (reason) {
       Alert.alert(
         "Unable to sign in",
-        reason instanceof Error ? reason.message : "Please check the account details.",
+        reason instanceof Error
+          ? reason.message
+          : "Please check the account details.",
       );
     } finally {
       setSigningIn(false);
@@ -83,12 +86,28 @@ export default function AdminScreen({
       ],
     );
   };
+  const confirmLogout = () => {
+    Alert.alert(
+      "Sign out of admin?",
+      "You will need to sign in again to manage temple content.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Sign out",
+          style: "destructive",
+          onPress: () => {
+            void signOutToHome(leaveAdmin, navigation);
+          },
+        },
+      ],
+    );
+  };
   const publish = async () => {
     if (!title.trim() || !body.trim())
       return Alert.alert("Add a title and message.");
     try {
       await publishUpdate(title.trim(), body.trim());
-      navigation.navigate("MainTabs", { screen: "Updates" });
+      navigation.popTo("MainTabs", { screen: "Updates" });
     } catch (reason) {
       Alert.alert(
         "Unable to publish",
@@ -187,7 +206,11 @@ export default function AdminScreen({
         <>
           <View style={s.ready}>
             <Icon
-              name={adminSession?.role === "superAdmin" ? "shield-checkmark" : "checkmark-circle"}
+              name={
+                adminSession?.role === "superAdmin"
+                  ? "shield-checkmark"
+                  : "checkmark-circle"
+              }
               color="#91BE91"
             />
             <View style={{ flex: 1 }}>
@@ -197,15 +220,28 @@ export default function AdminScreen({
                   : "Verified temple administrator"}
               </Text>
               {adminSession ? (
-                <Text style={s.signedInAs}>Signed in as {adminSession.username}</Text>
+                <Text style={s.signedInAs}>
+                  Signed in as {adminSession.username}
+                </Text>
               ) : null}
             </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Sign out of admin"
+              hitSlop={8}
+              onPress={confirmLogout}
+              style={({ pressed }) => [s.logout, pressed && { opacity: 0.62 }]}
+            >
+              <Icon name="log-out-outline" size={18} color="#E9A397" />
+              <Text style={s.logoutText}>Logout</Text>
+            </Pressable>
           </View>
           {adminSession?.role === "superAdmin" ? (
             <>
               <Text style={s.section}>Manage administrators</Text>
               <Text style={s.localNote}>
-                Only the super administrator can remove another administrator's access.
+                Only the super administrator can remove another administrator's
+                access.
               </Text>
               {adminAccounts
                 .filter((account) => account.uid !== adminSession.uid)
@@ -216,21 +252,29 @@ export default function AdminScreen({
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={s.actionTitle}>{account.displayName}</Text>
-                      <Text style={s.actionSub}>@{account.username} · Administrator</Text>
+                      <Text style={s.actionSub}>
+                        @{account.username} · Administrator
+                      </Text>
                     </View>
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel={`Delete administrator ${account.displayName}`}
                       hitSlop={10}
-                      onPress={() => confirmDeleteAdmin(account.uid, account.displayName)}
+                      onPress={() =>
+                        confirmDeleteAdmin(account.uid, account.displayName)
+                      }
                       style={s.deleteAdmin}
                     >
                       <Icon name="trash-outline" color="#E58A7B" />
                     </Pressable>
                   </View>
                 ))}
-              {adminAccounts.filter((account) => account.uid !== adminSession.uid).length === 0 ? (
-                <Text style={s.emptyAdmins}>No other administrator accounts.</Text>
+              {adminAccounts.filter(
+                (account) => account.uid !== adminSession.uid,
+              ).length === 0 ? (
+                <Text style={s.emptyAdmins}>
+                  No other administrator accounts.
+                </Text>
               ) : null}
             </>
           ) : null}
@@ -273,7 +317,9 @@ export default function AdminScreen({
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={s.eventKind}>
-                    {event.kind === "temple" ? eventT.templeEvent : eventT.padiPuja}
+                    {event.kind === "temple"
+                      ? eventT.templeEvent
+                      : eventT.padiPuja}
                   </Text>
                   <Text style={s.eventTitle} numberOfLines={2}>
                     {localize(event.title, language)}
@@ -336,13 +382,6 @@ export default function AdminScreen({
             secondary
           />
           <Text style={s.localNote}>{t.localDocumentsNote}</Text>
-          <View style={{ height: 12 }} />
-          <GoldButton
-            label="Sign out of admin"
-            icon="log-out-outline"
-            onPress={() => void leaveAdmin()}
-            secondary
-          />
         </>
       )}
     </Page>
@@ -440,6 +479,18 @@ const s = StyleSheet.create({
   },
   readyText: { color: "#A6C6A4", fontSize: 12, fontWeight: "700" },
   signedInAs: { color: colors.muted, fontSize: 9, marginTop: 3 },
+  logout: {
+    minHeight: 42,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "rgba(229,138,123,.1)",
+    borderWidth: 1,
+    borderColor: "rgba(229,138,123,.25)",
+  },
+  logoutText: { color: "#E9A397", fontSize: 10, fontWeight: "800" },
   section: {
     color: colors.cream,
     fontSize: 18,
@@ -525,7 +576,12 @@ const s = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: 0.8,
   },
-  eventTitle: { color: colors.cream, fontSize: 13, fontWeight: "800", marginTop: 3 },
+  eventTitle: {
+    color: colors.cream,
+    fontSize: 13,
+    fontWeight: "800",
+    marginTop: 3,
+  },
   eventMeta: { color: colors.muted, fontSize: 9, marginTop: 4 },
   eventButtons: { gap: 5 },
   editEvent: {
@@ -557,7 +613,12 @@ const s = StyleSheet.create({
     marginBottom: 12,
   },
   noEventsText: { color: colors.muted, fontSize: 11 },
-  localNote: { color: "#7D7662", fontSize: 9, lineHeight: 14, marginBottom: 16 },
+  localNote: {
+    color: "#7D7662",
+    fontSize: 9,
+    lineHeight: 14,
+    marginBottom: 16,
+  },
   documentCard: {
     minHeight: 82,
     borderRadius: 18,
@@ -579,5 +640,10 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   documentTitle: { color: colors.cream, fontSize: 14, fontWeight: "800" },
-  documentSub: { color: colors.muted, fontSize: 10, lineHeight: 15, marginTop: 4 },
+  documentSub: {
+    color: colors.muted,
+    fontSize: 10,
+    lineHeight: 15,
+    marginTop: 4,
+  },
 });

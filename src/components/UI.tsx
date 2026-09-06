@@ -1,13 +1,5 @@
 import React from "react";
-import {
-  Platform,
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../theme";
 
@@ -81,11 +73,7 @@ export function Page({
   children: React.ReactNode;
   scroll?: boolean;
 }) {
-  const content = (
-    <SafeAreaView style={s.safe}>
-      <View style={s.page}>{children}</View>
-    </SafeAreaView>
-  );
+  const content = <View style={s.page}>{children}</View>;
   return scroll ? (
     <ScrollView
       style={s.root}
@@ -101,15 +89,21 @@ export function Page({
 export function BackButton({
   navigation,
   label = "Back",
+  compact = false,
 }: {
   navigation: { goBack: () => void };
   label?: string;
+  compact?: boolean;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
       hitSlop={12}
-      style={s.back}
+      style={({ pressed }) => [
+        s.back,
+        compact && s.backCompact,
+        pressed && { opacity: 0.65 },
+      ]}
       onPress={() => navigation.goBack()}
     >
       <Icon name="chevron-back" size={25} color={colors.gold} />
@@ -138,10 +132,9 @@ export function Card({
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.ink },
   scroll: { paddingBottom: 115 },
-  safe: { flex: 1 },
   page: {
     paddingHorizontal: 18,
-    paddingTop: Platform.OS === "android" ? 34 : 12,
+    paddingTop: 12,
   },
   header: { marginBottom: 20 },
   eyebrow: {
@@ -199,6 +192,11 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(233,185,73,.1)",
     borderWidth: 1,
     borderColor: "rgba(233,185,73,.24)",
+  },
+  backCompact: {
+    minHeight: 48,
+    minWidth: 104,
+    marginBottom: 0,
   },
   backText: { color: colors.gold, fontSize: 13, fontWeight: "800" },
   card: {

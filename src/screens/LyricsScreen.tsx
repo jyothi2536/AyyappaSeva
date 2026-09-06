@@ -78,7 +78,6 @@ const s = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.ink,
-    paddingTop: Platform.OS === "android" ? 38 : 0,
   },
   header: {
     minHeight: 92,

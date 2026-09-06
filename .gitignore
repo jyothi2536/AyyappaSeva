@@ -11,10 +11,27 @@ tmp/
 output/
 
 # Native build output
+/build/
+DerivedData/
 android/.gradle/
 android/build/
 android/app/build/
 ios/build/
+*.xcarchive/
+*.dSYM/
+*.ipa
+*.apk
+*.aab
+
+# Private release-signing credentials (keep the standard Android debug key)
+*.p8
+*.p12
+*.mobileprovision
+*.provisionprofile
+*.jks
+*.keystore
+!android/app/debug.keystore
+credentials.json
 
 # Editor and operating-system files
 .DS_Store

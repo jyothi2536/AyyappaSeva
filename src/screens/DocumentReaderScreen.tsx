@@ -68,30 +68,36 @@ export default function DocumentReaderScreen({
   const isPdf = document.type === "PDF";
   return (
     <View style={s.root}>
-      <View style={s.header}>
-        <BackButton navigation={navigation} />
-        <View style={{ flex: 1 }}>
-          <Text numberOfLines={1} style={s.title}>
-            {document.title}
-          </Text>
-          <Text style={s.meta}>
-            {isPdf
-              ? pages
-                ? `${page} / ${pages} pages`
-                : "PDF document"
-              : `${document.type} · In-app reader`}
-          </Text>
-        </View>
-        {!isPdf && document.type !== "AUDIO" && (
-          <View style={s.fonts}>
-            <Pressable onPress={() => setFontSize((v) => Math.max(14, v - 2))}>
-              <Text style={s.font}>A−</Text>
-            </Pressable>
-            <Pressable onPress={() => setFontSize((v) => Math.min(28, v + 2))}>
-              <Text style={s.font}>A+</Text>
-            </Pressable>
+      <View style={s.headerSafeArea}>
+        <View style={s.header}>
+          <BackButton navigation={navigation} compact />
+          <View style={{ flex: 1 }}>
+            <Text numberOfLines={1} style={s.title}>
+              {document.title}
+            </Text>
+            <Text style={s.meta}>
+              {isPdf
+                ? pages
+                  ? `${page} / ${pages} pages`
+                  : "PDF document"
+                : `${document.type} · In-app reader`}
+            </Text>
           </View>
-        )}
+          {!isPdf && document.type !== "AUDIO" && (
+            <View style={s.fonts}>
+              <Pressable
+                onPress={() => setFontSize((v) => Math.max(14, v - 2))}
+              >
+                <Text style={s.font}>A−</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setFontSize((v) => Math.min(28, v + 2))}
+              >
+                <Text style={s.font}>A+</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
       </View>
       {isPdf && document.uri ? (
         <View style={s.pdfStage}>
@@ -122,8 +128,8 @@ export default function DocumentReaderScreen({
           <Icon name="document-text" size={44} color={colors.gold} />
           <Text style={s.emptyTitle}>Legacy Word document</Text>
           <Text style={s.error}>
-            DOC files require a compatible document app. PDF and DOCX files
-            can be read directly inside Ayyappa Seva.
+            DOC files require a compatible document app. PDF and DOCX files can
+            be read directly inside Ayyappa Seva.
           </Text>
           {error ? <Text style={s.error}>{error}</Text> : null}
           <GoldButton
@@ -169,10 +175,14 @@ const s = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: "#080806",
-    paddingTop: Platform.OS === "android" ? 38 : 0,
+  },
+  headerSafeArea: {
+    zIndex: 2,
+    elevation: 2,
+    backgroundColor: colors.surface,
   },
   header: {
-    minHeight: 82,
+    minHeight: 70,
     paddingHorizontal: 13,
     flexDirection: "row",
     alignItems: "center",
