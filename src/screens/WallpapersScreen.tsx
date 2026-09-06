@@ -9,8 +9,7 @@ import {
   View,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import * as MediaLibrary from "expo-media-library";
-import { Asset } from "expo-asset";
+import { saveWallpaperAsset } from "../services/wallpapers";
 import { BackButton, Icon, Page, ScreenHeader } from "../components/UI";
 import { wallpapers } from "../data/content";
 import type { RootStackParamList, Wallpaper } from "../types";
@@ -22,14 +21,15 @@ export default function WallpapersScreen({
   const [selected, setSelected] = useState<Wallpaper | null>(null);
   const save = async () => {
     if (!selected) return;
-    const permission = await MediaLibrary.requestPermissionsAsync();
-    if (!permission.granted)
-      return Alert.alert("Photo permission is required.");
-    const asset = Asset.fromModule(selected.source);
-    await asset.downloadAsync();
-    if (!asset.localUri) return Alert.alert("Unable to prepare wallpaper.");
-    await MediaLibrary.saveToLibraryAsync(asset.localUri);
-    Alert.alert("Wallpaper saved");
+    try {
+      await saveWallpaperAsset(selected.source);
+      Alert.alert("Wallpaper saved");
+    } catch (reason) {
+      Alert.alert(
+        "Unable to save wallpaper",
+        reason instanceof Error ? reason.message : "Please try again.",
+      );
+    }
   };
   return (
     <>
