@@ -27,9 +27,17 @@ for (const width of [280, 318, 369, 390, 440, 560, 678]) {
     } else {
       assert.ok(image.left === 0 || image.left === width - image.width);
     }
-    // The crown and seated deity remain vertically in view; copy is below the photo.
-    assert.ok(image.top + image.height * (30 / photo.height) > 0);
-    assert.ok(image.top + image.height * (630 / photo.height) < viewportHeight);
+    const targetY = viewportHeight * photo.targetY;
+    const expectedTop = targetY - image.height * photo.focalY;
+    const minTop = viewportHeight - image.height;
+    if (expectedTop >= minTop && expectedTop <= 0) {
+      assert.ok(Math.abs(image.top + image.height * photo.focalY - targetY) < 1e-8);
+    } else {
+      assert.ok(image.top === 0 || image.top === minTop);
+    }
+    // The face-focused focal point remains visible after zoom.
+    const focalYOnScreen = image.top + image.height * photo.focalY;
+    assert.ok(focalYOnScreen >= 0 && focalYOnScreen <= viewportHeight);
   });
 }
 

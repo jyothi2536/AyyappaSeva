@@ -19,13 +19,13 @@ vm.runInNewContext(outputText, {
   },
 }, { filename });
 
-test("Home, welcome and wallpaper use distinct Atlanta temple images", () => {
-  assert.equal(content.homeTempleImage, "../../assets/temple/atlanta-ayyappa-home.jpg");
+test("Home, welcome and wallpaper use distinct temple images", () => {
+  assert.equal(content.homeTempleImage, "../../assets/temple/ayyappa4.jpg");
   assert.equal(content.welcomeTempleImage, "../../assets/temple/atlanta-ayyappa-welcome-floral.jpg");
   assert.notEqual(content.welcomeTempleImage, content.homeTempleImage);
   assert.notEqual(content.welcomeTempleImage, content.wallpapers[0].source);
   assert.equal(content.wallpapers[0].id, "ayyappa");
-  assert.equal(content.wallpapers[0].source, "../../assets/temple/atlanta-ayyappa-welcome.png");
+  assert.equal(content.wallpapers[0].source, "../../assets/temple/ayyappa7.jpg");
   assert.equal(content.wallpapers[0].subtitle, "Atlanta Ayyappa Temple");
 });
 
