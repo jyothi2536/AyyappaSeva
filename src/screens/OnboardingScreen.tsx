@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
+  AccessibilityInfo,
   Animated,
   ImageBackground,
   Pressable,
@@ -11,7 +12,9 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Icon } from "../components/UI";
-import { languages, onboardingCopy, TEMPLE, wallpapers } from "../data/content";
+import PetalShower from "../components/PetalShower";
+import { startWelcomeReveal } from "../components/welcomeReveal";
+import { languages, onboardingCopy, TEMPLE, welcomeTempleImage } from "../data/content";
 import { useApp } from "../state/AppContext";
 import type { Language } from "../types";
 import { colors } from "../theme";
@@ -26,43 +29,41 @@ export default function OnboardingScreen({
   onComplete,
 }: OnboardingScreenProps) {
   const { finishOnboarding, language } = useApp();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const [stage, setStage] = useState<"doors" | "language">("doors");
+  const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
+  const [petalsVisible, setPetalsVisible] = useState(false);
   const [selected, setSelected] = useState<Language>(language);
   const left = useRef(new Animated.Value(0)).current;
   const right = useRef(new Animated.Value(0)).current;
+  const petals = useRef(new Animated.Value(0)).current;
   const completionRef = useRef(onComplete);
   completionRef.current = onComplete;
   useEffect(() => {
-    left.setValue(0);
-    right.setValue(0);
-    let completionTimer: ReturnType<typeof setTimeout> | undefined;
-    const distance = width / 2 + 12;
-    const animation = Animated.parallel([
-      Animated.timing(left, {
-        toValue: -distance,
-        duration: 1800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(right, {
-        toValue: distance,
-        duration: 1800,
-        useNativeDriver: true,
-      }),
-    ]);
-    animation.start(({ finished }) => {
-      if (finished && returning) {
-        completionTimer = setTimeout(
-          () => completionRef.current?.(),
-          700,
-        );
-      }
+    let active = true;
+    let preferenceChanged = false;
+    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", (enabled) => {
+      preferenceChanged = true;
+      if (active) setReduceMotion(enabled);
+    });
+    void AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+      if (active && !preferenceChanged) setReduceMotion(enabled);
+    }).catch(() => {
+      if (active && !preferenceChanged) setReduceMotion(true);
     });
     return () => {
-      animation.stop();
-      if (completionTimer) clearTimeout(completionTimer);
+      active = false;
+      subscription.remove();
     };
-  }, [left, returning, right, width]);
+  }, []);
+  useEffect(() => {
+    if (stage !== "doors" || reduceMotion === null) return;
+    return startWelcomeReveal({
+      left, right, petals, width, reduceMotion, returning,
+      onPetalsVisible: setPetalsVisible,
+      onComplete: () => completionRef.current?.(),
+    });
+  }, [left, right, petals, width, reduceMotion, returning, stage]);
   if (stage === "language") {
     const copy = onboardingCopy[selected];
     return (
@@ -109,7 +110,7 @@ export default function OnboardingScreen({
   return (
     <View style={s.root}>
       <ImageBackground
-        source={wallpapers[0].source}
+        source={welcomeTempleImage}
         style={StyleSheet.absoluteFill}
         imageStyle={{ resizeMode: "cover" }}
       >
@@ -117,6 +118,7 @@ export default function OnboardingScreen({
           colors={["rgba(0,0,0,.08)", "transparent", "rgba(0,0,0,.88)"]}
           style={StyleSheet.absoluteFill}
         />
+        {petalsVisible && <PetalShower progress={petals} width={width} height={height} />}
         <View style={s.reveal}>
           <Text
             accessibilityRole="header"

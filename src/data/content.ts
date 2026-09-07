@@ -550,8 +550,8 @@ export const wallpapers = [
   {
     id: "ayyappa",
     name: "Lord Ayyappa",
-    subtitle: "Golden sanctum",
-    source: require("../../assets/wallpapers/ayyappa.png"),
+    subtitle: "Atlanta Ayyappa Temple",
+    source: require("../../assets/temple/atlanta-ayyappa-welcome.png"),
     accent: "#E9B949",
   },
   {
@@ -597,4 +597,5 @@ export const wallpapers = [
     accent: "#E6782F",
   },
 ] as const satisfies readonly Wallpaper[];
-export const homeTempleImage = require("../../assets/temple/ayyappa-home-original-v2.png");
+export const homeTempleImage = require("../../assets/temple/atlanta-ayyappa-home.jpg");
+export const welcomeTempleImage = require("../../assets/temple/atlanta-ayyappa-welcome-floral.jpg");

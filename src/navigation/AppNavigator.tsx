@@ -1,10 +1,11 @@
-import React, { useCallback, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Animated, Easing, StyleSheet, View } from "react-native";
 import {
   createNavigationContainerRef,
   DarkTheme,
   NavigationContainer,
   StackActions,
+  useIsFocused,
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -31,19 +32,81 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tabs = createBottomTabNavigator<TabParamList>();
 const navigationRef = createNavigationContainerRef<RootStackParamList>();
 const tabNames: AppTab[] = ["Home", "Songs", "Updates", "Temple", "Profile"];
+
+function withScreenMotion<Props extends object>(Screen: React.ComponentType<Props>) {
+  return function MotionScreen(props: Props) {
+    const isFocused = useIsFocused();
+    const progress = useRef(new Animated.Value(1)).current;
+
+    useEffect(() => {
+      Animated.timing(progress, {
+        toValue: isFocused ? 1 : 0,
+        duration: isFocused ? 240 : 140,
+        easing: isFocused ? Easing.out(Easing.cubic) : Easing.in(Easing.quad),
+        useNativeDriver: true,
+        isInteraction: false,
+      }).start();
+    }, [isFocused, progress]);
+
+    const opacity = progress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.94, 1],
+    });
+    const translateY = progress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [10, 0],
+    });
+    const scale = progress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.985, 1],
+    });
+
+    return (
+      <Animated.View
+        style={[
+          s.screenMotion,
+          {
+            opacity,
+            transform: [{ translateY }, { scale }],
+          },
+        ]}
+      >
+        {React.createElement(Screen, props)}
+      </Animated.View>
+    );
+  };
+}
+
+const HomeScreenAnimated = withScreenMotion(HomeScreen);
+const SongsScreenAnimated = withScreenMotion(SongsScreen);
+const UpdatesScreenAnimated = withScreenMotion(UpdatesScreen);
+const TempleScreenAnimated = withScreenMotion(TempleScreen);
+const ProfileScreenAnimated = withScreenMotion(ProfileScreen);
+const DownloadsScreenAnimated = withScreenMotion(DownloadsScreen);
+const WallpapersScreenAnimated = withScreenMotion(WallpapersScreen);
+const ScripturesScreenAnimated = withScreenMotion(ScripturesScreen);
+const HarivarasanamScreenAnimated = withScreenMotion(HarivarasanamScreen);
+const LyricsScreenAnimated = withScreenMotion(LyricsScreen);
+const DocumentReaderScreenAnimated = withScreenMotion(DocumentReaderScreen);
+const AdminScreenAnimated = withScreenMotion(AdminScreen);
+const AdminTempleEventScreenAnimated = withScreenMotion(AdminTempleEventScreen);
+const AdminPadiPujaScreenAnimated = withScreenMotion(AdminPadiPujaScreen);
+const AdminCalendarScreenAnimated = withScreenMotion(AdminCalendarScreen);
+
 function MainTabs() {
   return (
     <Tabs.Navigator
       tabBar={() => null}
       screenOptions={{
         headerShown: false,
+        animation: "shift",
       }}
     >
-      <Tabs.Screen name="Home" component={HomeScreen} />
-      <Tabs.Screen name="Songs" component={SongsScreen} />
-      <Tabs.Screen name="Updates" component={UpdatesScreen} />
-      <Tabs.Screen name="Temple" component={TempleScreen} />
-      <Tabs.Screen name="Profile" component={ProfileScreen} />
+  <Tabs.Screen name="Home" component={HomeScreenAnimated} />
+  <Tabs.Screen name="Songs" component={SongsScreenAnimated} />
+  <Tabs.Screen name="Updates" component={UpdatesScreenAnimated} />
+  <Tabs.Screen name="Temple" component={TempleScreenAnimated} />
+  <Tabs.Screen name="Profile" component={ProfileScreenAnimated} />
     </Tabs.Navigator>
   );
 }
@@ -86,34 +149,41 @@ export default function AppNavigator() {
               headerShown: false,
               presentation: "card",
               contentStyle: { backgroundColor: colors.ink },
-              animation: "slide_from_right",
+              animation: "fade_from_bottom",
             }}
           >
             <Stack.Screen name="MainTabs" component={MainTabs} />
-            <Stack.Screen name="Downloads" component={DownloadsScreen} />
-            <Stack.Screen name="Wallpapers" component={WallpapersScreen} />
-            <Stack.Screen name="Scriptures" component={ScripturesScreen} />
+            <Stack.Screen name="Downloads" component={DownloadsScreenAnimated} />
+            <Stack.Screen name="Wallpapers" component={WallpapersScreenAnimated} />
+            <Stack.Screen name="Scriptures" component={ScripturesScreenAnimated} />
             <Stack.Screen
               name="Harivarasanam"
-              component={HarivarasanamScreen}
+              component={HarivarasanamScreenAnimated}
             />
-            <Stack.Screen name="Lyrics" component={LyricsScreen} />
+            <Stack.Screen name="Lyrics" component={LyricsScreenAnimated} />
             <Stack.Screen
               name="DocumentReader"
-              component={DocumentReaderScreen}
+              component={DocumentReaderScreenAnimated}
             />
-            <Stack.Screen name="Admin" component={AdminScreen} />
+            <Stack.Screen
+              name="Admin"
+              component={AdminScreenAnimated}
+              options={{ animation: "slide_from_right" }}
+            />
             <Stack.Screen
               name="AdminTempleEvent"
-              component={AdminTempleEventScreen}
+              component={AdminTempleEventScreenAnimated}
+              options={{ animation: "slide_from_right" }}
             />
             <Stack.Screen
               name="AdminPadiPuja"
-              component={AdminPadiPujaScreen}
+              component={AdminPadiPujaScreenAnimated}
+              options={{ animation: "slide_from_right" }}
             />
             <Stack.Screen
               name="AdminCalendar"
-              component={AdminCalendarScreen}
+              component={AdminCalendarScreenAnimated}
+              options={{ animation: "slide_from_right" }}
             />
           </Stack.Navigator>
         </NavigationContainer>
@@ -125,4 +195,5 @@ export default function AppNavigator() {
 const s = StyleSheet.create({
   shell: { flex: 1, backgroundColor: colors.ink },
   content: { flex: 1 },
+  screenMotion: { flex: 1 },
 });

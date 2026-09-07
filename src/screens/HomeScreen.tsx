@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import {
-  Dimensions,
+  Image,
   ImageBackground,
   Pressable,
   ScrollView,
@@ -13,6 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Icon } from "../components/UI";
+import { getHomeTempleFraming } from "../components/homeTempleFraming";
 import { homeTempleImage, wallpapers } from "../data/content";
 import { useApp } from "../state/AppContext";
 import type { RootStackParamList, TabParamList } from "../types";
@@ -20,6 +21,8 @@ import { colors } from "../theme";
 
 export default function HomeScreen() {
   const { t } = useApp();
+  const [photoWidth, setPhotoWidth] = useState(0);
+  const framing = getHomeTempleFraming(photoWidth);
   const tab = useNavigation<BottomTabNavigationProp<TabParamList>>();
   const root = tab.getParent<NativeStackNavigationProp<RootStackParamList>>();
   return (
@@ -28,22 +31,53 @@ export default function HomeScreen() {
       contentContainerStyle={s.content}
       showsVerticalScrollIndicator={false}
     >
-      <ImageBackground
-        source={homeTempleImage}
-        style={s.hero}
-        imageStyle={s.heroImage}
-      >
+      <View style={s.heroSpace}>
         <LinearGradient
-          colors={["rgba(11,11,8,.02)", "rgba(11,11,8,.06)", colors.ink]}
-          locations={[0, 0.48, 1]}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={s.heroCopy}>
-          <Text style={s.mantra}>{t.greeting}</Text>
-          <Text style={s.heroSub}>{t.welcome}</Text>
-          <Text style={s.ornament}>──── ◆ ────</Text>
-        </View>
-      </ImageBackground>
+          colors={["#987740", "#42331B", "#786035"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={s.heroFrame}
+        >
+          <View style={s.heroInner}>
+            <View
+              onLayout={({ nativeEvent }) => setPhotoWidth(nativeEvent.layout.width)}
+              style={[s.heroPhoto, { height: framing.viewportHeight }]}
+            >
+              {photoWidth > 0 && (
+                <Image
+                  source={homeTempleImage}
+                  accessibilityLabel="Lord Ayyappa at Atlanta Ayyappa Temple"
+                  resizeMode="contain"
+                  style={[s.heroImage, framing.image]}
+                />
+              )}
+              <LinearGradient
+                pointerEvents="none"
+                colors={["rgba(15,12,6,.42)", "transparent", "transparent", "rgba(15,12,6,.42)"]}
+                locations={[0, 0.24, 0.76, 1]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <LinearGradient
+                pointerEvents="none"
+                colors={["rgba(15,12,6,.10)", "transparent", "rgba(25,21,12,.65)"]}
+                locations={[0, 0.7, 1]}
+                style={StyleSheet.absoluteFill}
+              />
+            </View>
+            <LinearGradient colors={["#19150C", "#11110C"]} style={s.heroCopy}>
+              <View accessible={false} style={s.ornament}>
+                <View style={s.ornamentLine} />
+                <View style={s.ornamentDiamond} />
+                <View style={s.ornamentLine} />
+              </View>
+              <Text style={s.mantra}>{t.greeting}</Text>
+              <Text style={s.heroSub}>{t.welcome}</Text>
+            </LinearGradient>
+          </View>
+        </LinearGradient>
+      </View>
       <View style={s.page}>
         <Title text={t.today} />
         <LinearGradient colors={["#302716", "#1A1810"]} style={s.event}>
@@ -119,22 +153,44 @@ function Title({
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.ink },
   content: { paddingBottom: 30 },
-  hero: {
-    height: Math.min(Dimensions.get("window").height * 0.64, 560),
-    justifyContent: "flex-end",
+  heroSpace: { paddingHorizontal: 20, paddingTop: 18 },
+  heroFrame: {
+    width: "100%",
+    maxWidth: 680,
+    alignSelf: "center",
+    borderRadius: 28,
+    padding: 1,
   },
-  heroImage: { resizeMode: "cover" },
-  heroCopy: { alignItems: "center", padding: 24 },
+  heroInner: {
+    backgroundColor: "#19150C",
+    borderRadius: 27,
+    overflow: "hidden",
+  },
+  heroPhoto: { width: "100%", overflow: "hidden" },
+  heroImage: { position: "absolute" },
+  heroCopy: {
+    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingTop: 14,
+    paddingBottom: 24,
+  },
   mantra: {
     color: colors.cream,
-    fontSize: 26,
-    fontWeight: "900",
+    fontSize: 24,
+    lineHeight: 32,
+    fontWeight: "700",
     textAlign: "center",
-    textShadowColor: "#000",
-    textShadowRadius: 12,
   },
-  heroSub: { color: "#D2C9AD", marginTop: 8 },
-  ornament: { color: colors.gold, marginTop: 17 },
+  heroSub: {
+    color: "#C4B99C",
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 8,
+    textAlign: "center",
+  },
+  ornament: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 14 },
+  ornamentLine: { width: 35, height: 1, backgroundColor: "#806330" },
+  ornamentDiamond: { width: 5, height: 5, backgroundColor: colors.gold, transform: [{ rotate: "45deg" }] },
   page: { paddingHorizontal: 20 },
   sectionTitle: {
     flexDirection: "row",
