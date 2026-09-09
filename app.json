@@ -36,10 +36,11 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.varktraditions.ayyappaseva.mobile",
-      "buildNumber": "6"
+      "version": "1.0.2",
+      "buildNumber": "7"
     },
     "android": {
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0B0B08"
