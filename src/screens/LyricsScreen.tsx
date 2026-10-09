@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { getAyyappa108 } from "../../Ayyappa108Lyrics";
 import { getAyyappaDeepaaradhana } from "../../AyyappaDeepaaradhanaLyrics";
 import { BackButton, Icon } from "../components/UI";
+import { LyricsLanguagePicker } from "../components/LyricsLanguagePicker";
 import { useApp } from "../state/AppContext";
 import type { RootStackParamList } from "../types";
 import { colors } from "../theme";
@@ -12,7 +13,7 @@ export default function LyricsScreen({
   navigation,
   route,
 }: NativeStackScreenProps<RootStackParamList, "Lyrics">) {
-  const { language, t } = useApp();
+  const { lyricsLanguage: language, t } = useApp();
   const is108 = route.params.kind === "saranams108";
   const content = useMemo(
     () => (is108 ? getAyyappa108(language) : getAyyappaDeepaaradhana(language)),
@@ -28,7 +29,8 @@ export default function LyricsScreen({
         </View>
       </View>
       <ScrollView contentContainerStyle={s.content}>
-        <View style={s.badge}>
+        <LyricsLanguagePicker />
+        <View style={[s.badge, { marginTop: 14 }]}>
           <Icon name="cloud-done" size={18} color="#A7D0A6" />
           <Text style={s.badgeText}>{content.offline}</Text>
         </View>
@@ -77,7 +79,7 @@ export default function LyricsScreen({
 const s = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.ink,
+    backgroundColor: colors.background,
   },
   header: {
     minHeight: 92,
@@ -89,7 +91,7 @@ const s = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.line,
   },
-  headerTitle: { color: colors.cream, fontSize: 16, fontWeight: "900" },
+  headerTitle: { color: colors.text, fontSize: 16, fontWeight: "900" },
   meta: { color: colors.muted, fontSize: 9, marginTop: 4 },
   content: { padding: 21, paddingBottom: 60 },
   badge: {
@@ -102,9 +104,9 @@ const s = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(72,99,70,.25)",
   },
-  badgeText: { color: "#A7D0A6", fontSize: 10, fontWeight: "800" },
+  badgeText: { color: colors.muted, fontSize: 10, fontWeight: "800" },
   heading: {
-    color: colors.cream,
+    color: colors.text,
     fontSize: 28,
     fontWeight: "900",
     marginTop: 21,
@@ -115,7 +117,7 @@ const s = StyleSheet.create({
     width: 40,
     height: 3,
     borderRadius: 2,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.goldFill,
     marginTop: 16,
     marginBottom: 19,
   },

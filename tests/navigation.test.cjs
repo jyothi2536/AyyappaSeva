@@ -47,6 +47,7 @@ async function setupNavigator() {
       createNavigationContainerRef: () => navigationRef,
       NavigationContainer: "NavigationContainer",
       DarkTheme: { colors: {} },
+      DefaultTheme: { colors: {} },
       StackActions: routers.StackActions,
     },
     "@react-navigation/native-stack": {
@@ -82,10 +83,10 @@ test("admin screens use the shared header/footer layout, not native modals", asy
   assert.equal(stack.props.screenOptions.presentation, "card");
   assert.equal(tree.some((node) => /modal|sheet/i.test(node.props?.screenOptions?.presentation ?? "")), false);
   const adminRoutes = nodes(stack).filter((node) => node.type === "Screen" && node.props.name.startsWith("Admin"));
-  assert.equal(adminRoutes.length, 4);
+  assert.equal(adminRoutes.length, 5);
 });
 
-for (const tab of ["Home", "Songs", "Updates", "Temple", "Profile"]) {
+for (const tab of ["Home", "Temple", "Updates", "Deeksha", "Songs", "Profile"]) {
   test(`footer ${tab} dismisses nested admin screens without duplicating MainTabs`, async () => {
     const app = await setupNavigator();
     app.tree.find((node) => node.type === "AppFooter").props.onNavigate(tab);

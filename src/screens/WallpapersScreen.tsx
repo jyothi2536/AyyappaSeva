@@ -170,8 +170,8 @@ const s = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   copy: { position: "absolute", left: 13, right: 12, bottom: 14 },
-  title: { color: colors.cream, fontSize: 14, fontWeight: "800" },
-  meta: { color: "#BDB6A1", fontSize: 9, marginTop: 3 },
+  title: { color: colors.text, fontSize: 14, fontWeight: "800" },
+  meta: { color: colors.muted, fontSize: 9, marginTop: 3 },
   arrowRow: {
     marginTop: 10,
     paddingHorizontal: 18,
@@ -190,7 +190,7 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(11,11,8,.58)",
   },
   arrowDisabled: {
-    borderColor: "rgba(168,163,143,.25)",
+    borderColor: colors.line,
     backgroundColor: "rgba(21,21,15,.5)",
   },
   swipeHint: {
@@ -229,7 +229,7 @@ const s = StyleSheet.create({
     textAlign: "center",
   },
   previewMeta: {
-    color: "#BDB6A1",
+    color: colors.muted,
     marginTop: 4,
     textAlign: "center",
     fontSize: 12,
@@ -237,7 +237,7 @@ const s = StyleSheet.create({
   save: {
     height: 54,
     borderRadius: 17,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.goldFill,
     flexDirection: "row",
     gap: 9,
     alignItems: "center",

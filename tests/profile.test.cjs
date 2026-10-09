@@ -33,11 +33,13 @@ function nodes(element) {
   return [element, ...nodes(element.props?.children)];
 }
 
-for (const language of ["en", "te", "ta", "kn"]) {
+// The app UI is English-only; lyrics languages are chosen inside the music section.
+for (const language of ["en"]) {
   for (const isAdmin of [false, true]) {
-    test(`${language}: no user signup; admin access and preferences remain (${isAdmin ? "admin" : "guest"})`, () => {
+    test(`${language}: no user signup or language picker; admin access remains (${isAdmin ? "admin" : "guest"})`, () => {
       const navigated = [];
       const selectedLanguages = [];
+      const selectedThemes = [];
       let welcomeCount = 0;
       let logoutCount = 0;
       const state = {
@@ -49,6 +51,8 @@ for (const language of ["en", "te", "ta", "kn"]) {
         setLanguage: (value) => selectedLanguages.push(value),
         replayWelcome: () => welcomeCount++,
         leaveAdmin: () => logoutCount++,
+        themeMode: "light",
+        setThemeMode: (value) => selectedThemes.push(value),
       };
       const dependencies = {
         react: require("react"),
@@ -80,10 +84,11 @@ for (const language of ["en", "te", "ta", "kn"]) {
       assert.equal(Object.hasOwn(state.t, "registered"), false);
 
       const buttons = tree.filter((node) => node.type === "Pressable");
-      assert.equal(buttons.length, isAdmin ? 7 : 6);
+      assert.equal(buttons.length, isAdmin ? 5 : 4);
       for (const button of buttons) button.props.onPress();
       assert.deepEqual(navigated, ["Admin"], "The only login route is Admin");
-      assert.deepEqual(selectedLanguages, ["en", "te", "ta", "kn"]);
+      assert.deepEqual(selectedThemes, ["light", "dark"], "Profile offers light and dark themes");
+      assert.deepEqual(selectedLanguages, [], "Profile no longer changes the UI language");
       assert.equal(welcomeCount, 1);
       assert.equal(logoutCount, isAdmin ? 1 : 0);
     });

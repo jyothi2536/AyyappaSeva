@@ -278,6 +278,13 @@ export default function AdminScreen({
               ) : null}
             </>
           ) : null}
+          <Text style={s.section}>Daily details</Text>
+          <AdminAction
+            icon="sunny"
+            title="Today at the Temple"
+            subtitle="Hours, deity of the day & pooja schedule"
+            onPress={() => navigation.navigate("AdminToday")}
+          />
           <Text style={s.section}>{eventT.manageSchedule}</Text>
           <AdminAction
             icon="business"
@@ -428,13 +435,13 @@ const s = StyleSheet.create({
     marginBottom: 16,
   },
   cloudConnected: {
-    borderColor: "rgba(145,190,145,.3)",
+    borderColor: colors.line,
     backgroundColor: "rgba(145,190,145,.08)",
   },
-  cloudText: { color: colors.cream, fontSize: 11, fontWeight: "700" },
+  cloudText: { color: colors.text, fontSize: 11, fontWeight: "700" },
   secure: {
     alignItems: "center",
-    backgroundColor: "#201B11",
+    backgroundColor: colors.surface,
     borderRadius: 22,
     borderWidth: 1,
     borderColor: colors.line,
@@ -442,7 +449,7 @@ const s = StyleSheet.create({
     marginBottom: 24,
   },
   secureTitle: {
-    color: colors.cream,
+    color: colors.text,
     fontWeight: "800",
     fontSize: 16,
     marginTop: 13,
@@ -454,12 +461,12 @@ const s = StyleSheet.create({
     textAlign: "center",
     marginTop: 5,
   },
-  label: { color: "#C4BFAF", fontSize: 11, fontWeight: "700", marginBottom: 7 },
+  label: { color: colors.muted, fontSize: 11, fontWeight: "700", marginBottom: 7 },
   input: {
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.line,
-    color: colors.cream,
+    color: colors.text,
     minHeight: 52,
     borderRadius: 14,
     paddingHorizontal: 14,
@@ -477,7 +484,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  readyText: { color: "#A6C6A4", fontSize: 12, fontWeight: "700" },
+  readyText: { color: colors.muted, fontSize: 12, fontWeight: "700" },
   signedInAs: { color: colors.muted, fontSize: 9, marginTop: 3 },
   logout: {
     minHeight: 42,
@@ -492,7 +499,7 @@ const s = StyleSheet.create({
   },
   logoutText: { color: "#E9A397", fontSize: 10, fontWeight: "800" },
   section: {
-    color: colors.cream,
+    color: colors.text,
     fontSize: 18,
     fontWeight: "900",
     marginTop: 10,
@@ -518,7 +525,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  actionTitle: { color: colors.cream, fontSize: 13, fontWeight: "800" },
+  actionTitle: { color: colors.text, fontSize: 13, fontWeight: "800" },
   actionSub: { color: colors.muted, fontSize: 9, lineHeight: 14, marginTop: 3 },
   adminAccount: {
     minHeight: 68,
@@ -563,7 +570,7 @@ const s = StyleSheet.create({
     width: 46,
     height: 58,
     borderRadius: 14,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.goldFill,
     alignItems: "center",
     justifyContent: "center",
     gap: 2,
@@ -577,7 +584,7 @@ const s = StyleSheet.create({
     letterSpacing: 0.8,
   },
   eventTitle: {
-    color: colors.cream,
+    color: colors.text,
     fontSize: 13,
     fontWeight: "800",
     marginTop: 3,
@@ -614,7 +621,7 @@ const s = StyleSheet.create({
   },
   noEventsText: { color: colors.muted, fontSize: 11 },
   localNote: {
-    color: "#7D7662",
+    color: colors.muted,
     fontSize: 9,
     lineHeight: 14,
     marginBottom: 16,
@@ -639,7 +646,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  documentTitle: { color: colors.cream, fontSize: 14, fontWeight: "800" },
+  documentTitle: { color: colors.text, fontSize: 14, fontWeight: "800" },
   documentSub: {
     color: colors.muted,
     fontSize: 10,

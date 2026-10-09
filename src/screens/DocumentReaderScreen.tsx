@@ -174,7 +174,7 @@ function Empty({
 const s = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#080806",
+    backgroundColor: colors.surface,
   },
   headerSafeArea: {
     zIndex: 2,
@@ -191,7 +191,7 @@ const s = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.line,
   },
-  title: { color: colors.cream, fontSize: 15, fontWeight: "800" },
+  title: { color: colors.text, fontSize: 15, fontWeight: "800" },
   meta: { color: colors.gold, fontSize: 9, marginTop: 4 },
   fonts: { flexDirection: "row", gap: 6 },
   font: {
@@ -202,7 +202,7 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(233,185,73,.08)",
     borderRadius: 9,
   },
-  pdfStage: { flex: 1, backgroundColor: "#292929" },
+  pdfStage: { flex: 1, backgroundColor: colors.surface },
   pdf: { flex: 1, width: "100%", height: "100%" },
   empty: {
     flex: 1,
@@ -211,7 +211,7 @@ const s = StyleSheet.create({
     padding: 34,
     gap: 14,
   },
-  emptyTitle: { color: colors.cream, fontSize: 20, fontWeight: "800" },
+  emptyTitle: { color: colors.text, fontSize: 20, fontWeight: "800" },
   error: {
     color: colors.muted,
     fontSize: 13,

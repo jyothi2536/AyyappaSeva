@@ -9,7 +9,7 @@ import { Icon } from "./UI";
 
 export type AppTab = keyof TabParamList;
 
-const tabs: AppTab[] = ["Home", "Songs", "Updates", "Temple", "Profile"];
+const tabs: AppTab[] = ["Home", "Temple", "Updates", "Deeksha", "Songs", "Profile"];
 const icons: Record<
   AppTab,
   {
@@ -18,9 +18,10 @@ const icons: Record<
   }
 > = {
   Home: { active: "home", inactive: "home-outline" },
-  Songs: { active: "musical-notes", inactive: "musical-notes-outline" },
-  Updates: { active: "notifications", inactive: "notifications-outline" },
+  Songs: { active: "book", inactive: "book-outline" },
+  Updates: { active: "flower", inactive: "flower-outline" },
   Temple: { active: "business", inactive: "business-outline" },
+  Deeksha: { active: "ellipse", inactive: "ellipse-outline" },
   Profile: { active: "person", inactive: "person-outline" },
 };
 
@@ -28,9 +29,14 @@ export function AppHeader({ onUpdates }: { onUpdates: () => void }) {
   return (
     <SafeAreaView edges={["top"]} style={s.topSafeArea}>
       <View style={s.header}>
-        <Text accessibilityRole="header" style={s.brand}>
-          {TEMPLE.name}
-        </Text>
+        <View style={{ flex: 1 }}>
+          <Text accessibilityRole="header" style={s.brand} numberOfLines={1} adjustsFontSizeToFit>
+            {TEMPLE.name}
+          </Text>
+          <Text style={s.tagline} numberOfLines={1} adjustsFontSizeToFit>
+            FAITH · CULTURE · SERVICE · COMMUNITY
+          </Text>
+        </View>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Temple updates"
@@ -38,7 +44,7 @@ export function AppHeader({ onUpdates }: { onUpdates: () => void }) {
           onPress={onUpdates}
           style={({ pressed }) => [s.headerAction, pressed && s.pressed]}
         >
-          <Icon name="notifications-outline" color={colors.gold} size={21} />
+          <Icon name="notifications-outline" color={colors.text} size={22} />
         </Pressable>
       </View>
     </SafeAreaView>
@@ -55,9 +61,10 @@ export function AppFooter({
   const { t, eventT } = useApp();
   const labels: Record<AppTab, string> = {
     Home: t.home,
-    Songs: t.songs,
-    Updates: eventT.events,
-    Temple: t.temple,
+    Temple: "About",
+    Updates: "Pooja Services",
+    Deeksha: "Deeksha",
+    Songs: "Resources",
     Profile: t.profile,
   };
   return (
@@ -73,16 +80,17 @@ export function AppFooter({
               onPress={() => onNavigate(tab)}
               style={({ pressed }) => [s.tab, pressed && s.pressed]}
             >
-              <View style={[s.iconWrap, active && s.iconActive]}>
+              <View style={s.iconWrap}>
                 <Icon
                   name={active ? icons[tab].active : icons[tab].inactive}
-                  size={20}
-                  color={active ? colors.ink : colors.muted}
+                  size={22}
+                  color={active ? colors.goldFill : "rgba(255,255,255,.82)"}
                 />
               </View>
               <Text style={[s.tabLabel, active && s.tabLabelActive]}>
                 {labels[tab]}
               </Text>
+              <View style={[s.indicator, active && s.indicatorActive]} />
             </Pressable>
           );
         })}
@@ -93,7 +101,7 @@ export function AppFooter({
 
 const s = StyleSheet.create({
   topSafeArea: {
-    backgroundColor: "rgba(12,12,9,.99)",
+    backgroundColor: colors.background,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.line,
   },
@@ -107,29 +115,39 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
   },
   brand: {
-    flex: 1,
-    color: colors.cream,
-    fontSize: 20,
+    color: colors.text,
+    fontSize: 21,
     fontWeight: "700",
+    fontFamily: "serif",
+  },
+  tagline: {
+    color: colors.gold,
+    fontSize: 9,
+    letterSpacing: 1.6,
+    fontWeight: "700",
+    marginTop: 3,
   },
   headerAction: {
     flexShrink: 0,
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(233,185,73,.08)",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "rgba(233,185,73,.18)",
+    borderColor: colors.line,
+    shadowColor: "#6B4A12",
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   bottomSafeArea: {
-    backgroundColor: "rgba(12,12,9,.99)",
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.line,
+    backgroundColor: colors.green,
   },
   footer: {
-    height: 68,
+    height: 70,
     flexDirection: "row",
     alignItems: "center",
   },
@@ -143,12 +161,17 @@ const s = StyleSheet.create({
   iconWrap: {
     width: 38,
     height: 29,
-    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
   },
-  iconActive: { backgroundColor: colors.gold },
-  tabLabel: { color: colors.muted, fontSize: 9, fontWeight: "700" },
-  tabLabelActive: { color: colors.gold },
+  tabLabel: {
+    color: "rgba(255,255,255,.82)",
+    fontSize: 9,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  tabLabelActive: { color: colors.goldFill, fontWeight: "800" },
+  indicator: { width: 34, height: 3, borderRadius: 2, marginTop: 3 },
+  indicatorActive: { backgroundColor: colors.goldFill },
   pressed: { opacity: 0.62 },
 });

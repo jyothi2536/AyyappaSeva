@@ -3,6 +3,8 @@ import { getApp, getApps, initializeApp } from "firebase/app";
 import * as FirebaseAuth from "firebase/auth";
 import {
   getAuth,
+  createUserWithEmailAndPassword,
+  deleteUser,
   initializeAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -20,6 +22,7 @@ import {
   onSnapshot,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc,
   where,
   writeBatch,
@@ -32,6 +35,7 @@ import type {
   AdminSession,
   CalendarEvent,
   CalendarEventInput,
+  TodaySchedule,
   Update,
 } from "../types";
 
@@ -173,6 +177,29 @@ export async function removeCalendarYear(year: number) {
   }
 }
 
+export function subscribeToTodaySchedule(
+  receive: (schedule: TodaySchedule | null) => void,
+  fail: (error: Error) => void,
+): Unsubscribe {
+  if (!db) return () => undefined;
+  return onSnapshot(
+    doc(db, "today", "current"),
+    (snapshot) => {
+      if (!snapshot.exists()) return receive(null);
+      const { updatedAt: _ignored, ...rest } = snapshot.data();
+      receive(rest as TodaySchedule);
+    },
+    (error) => fail(error),
+  );
+}
+
+export async function saveTodaySchedule(schedule: TodaySchedule) {
+  await setDoc(doc(requireDb(), "today", "current"), {
+    ...schedule,
+    updatedAt: serverTimestamp(),
+  });
+}
+
 export function subscribeToUpdates(
   receive: (updates: Update[]) => void,
   fail: (error: Error) => void,
@@ -304,4 +331,131 @@ export async function revokeAdminAccess(uid: string) {
     throw new Error("The super administrator cannot delete their own account.");
   }
   await deleteDoc(doc(requireDb(), "admins", uid));
+}
+
+// ---- Devotee (end-user) accounts -------------------------------------------
+
+const DEVOTEE_DOMAIN = "devotee.ayyappaseva.app";
+
+export function usernameToDevoteeEmail(username: string) {
+  const normalized = username.trim().toLowerCase();
+  if (!/^[a-z0-9._-]{3,40}$/.test(normalized)) {
+    throw new Error(
+      "Use 3–40 letters, numbers, dots, underscores or hyphens for the username.",
+    );
+  }
+  return `${normalized}@${DEVOTEE_DOMAIN}`;
+}
+
+export type DevoteeSession = { uid: string; username: string; expiresAt: number };
+
+export const DEVOTEE_SESSION_MS = 60 * 60 * 1000; // 1 hour
+const DEVOTEE_LOGIN_AT_KEY = "devoteeLoginAt";
+
+async function devoteeExpiry() {
+  const value = Number(await AsyncStorage.getItem(DEVOTEE_LOGIN_AT_KEY));
+  return value ? value + DEVOTEE_SESSION_MS : 0;
+}
+
+/** Signs the devotee out if their 1-hour session has ended. Returns true if signed out. */
+export async function enforceDevoteeSessionExpiry() {
+  const user = auth?.currentUser;
+  if (!user?.email?.endsWith(`@${DEVOTEE_DOMAIN}`)) return false;
+  if (Date.now() < (await devoteeExpiry())) return false;
+  await signOutDevotee();
+  return true;
+}
+
+export function subscribeToDevotee(receive: (session: DevoteeSession | null) => void) {
+  if (!auth) {
+    receive(null);
+    return () => undefined;
+  }
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let active = true;
+  const stop = onAuthStateChanged(auth, (user) => {
+    if (timer) clearTimeout(timer);
+    const email = user?.email ?? "";
+    if (!user || !email.endsWith(`@${DEVOTEE_DOMAIN}`)) {
+      receive(null);
+      return;
+    }
+    void devoteeExpiry().then((expiresAt) => {
+      if (!active) return;
+      const remaining = expiresAt - Date.now();
+      if (remaining <= 0) {
+        receive(null);
+        void signOutDevotee();
+        return;
+      }
+      receive({ uid: user.uid, username: email.split("@")[0]!, expiresAt });
+      timer = setTimeout(() => void enforceDevoteeSessionExpiry(), remaining + 500);
+    });
+  });
+  return () => {
+    active = false;
+    if (timer) clearTimeout(timer);
+    stop();
+  };
+}
+
+export async function signInDevotee(username: string, password: string) {
+  await AsyncStorage.setItem(DEVOTEE_LOGIN_AT_KEY, String(Date.now()));
+  try {
+    await signInWithEmailAndPassword(requireAuth(), usernameToDevoteeEmail(username), password);
+  } catch (reason) {
+    await AsyncStorage.removeItem(DEVOTEE_LOGIN_AT_KEY);
+    throw reason;
+  }
+}
+
+export async function signOutDevotee() {
+  await AsyncStorage.removeItem(DEVOTEE_LOGIN_AT_KEY);
+  await signOut(requireAuth());
+}
+
+export type DevoteeProfileInput = {
+  username: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+  address?: string;
+  phone: string;
+};
+
+/** Creates the devotee account + profile document, then signs out so the user logs in explicitly. */
+export async function createDevoteeAccount(input: DevoteeProfileInput) {
+  const instance = requireAuth();
+  const username = input.username.trim().toLowerCase();
+  let credential;
+  try {
+    credential = await createUserWithEmailAndPassword(
+      instance,
+      usernameToDevoteeEmail(username),
+      input.password,
+    );
+  } catch (reason) {
+    const code = (reason as { code?: string })?.code ?? "";
+    if (code === "auth/email-already-in-use") throw new Error("That username is already taken.");
+    if (code === "auth/weak-password") throw new Error("Password must be at least 6 characters.");
+    throw reason;
+  }
+  try {
+    // Make sure Firestore sees the brand-new login before writing the profile.
+    await credential.user.getIdToken(true);
+    await setDoc(doc(requireDb(), "devotees", credential.user.uid), {
+      username,
+      firstName: input.firstName.trim(),
+      lastName: input.lastName.trim(),
+      address: input.address?.trim() ?? "",
+      phone: input.phone.trim(),
+      createdAt: serverTimestamp(),
+    });
+  } catch (reason) {
+    // Roll back the login so the username can be used again.
+    await deleteUser(credential.user).catch(() => undefined);
+    throw reason;
+  } finally {
+    await signOut(instance).catch(() => undefined);
+  }
 }

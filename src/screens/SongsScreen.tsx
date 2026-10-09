@@ -63,18 +63,18 @@ export default function SongsScreen() {
         onPress={() => navigation.navigate("Scriptures")}
       >
         <LinearGradient
-          colors={["#31452F", "#172219"]}
+          colors={[colors.greenSoft, "#F4FAF5"]}
           style={StyleSheet.absoluteFill}
         />
         <View style={s.featureIcon}>
-          <Icon name="headset" color="#DCEFD9" size={27} />
+          <Icon name="headset" color={colors.success} size={27} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={s.badge}>{scripture.badge}</Text>
           <Text style={s.featureTitle}>{scripture.title}</Text>
           <Text style={s.featureSub}>{scripture.subtitle}</Text>
         </View>
-        <Icon name="chevron-forward" color="#A7D0A6" />
+        <Icon name="chevron-forward" color={colors.success} />
       </Pressable>
       <Pressable
         style={s.download}
@@ -100,8 +100,8 @@ export default function SongsScreen() {
             style={s.row}
             disabled={preparingDocument === document.id}
           >
-            <View style={[s.cover, { backgroundColor: "#3B2B14" }]}>
-              <Icon name="document-text" color={colors.gold} />
+            <View style={[s.cover, { backgroundColor: "#FFF1DA" }]}>
+              <Icon name="document-text" color={colors.saffron} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={s.title}>{document.title}</Text>
@@ -122,13 +122,13 @@ export default function SongsScreen() {
                 s.cover,
                 {
                   backgroundColor:
-                    song.type === "AUDIO" ? "#243B26" : "#3B2B14",
+                    song.type === "AUDIO" ? colors.greenSoft : "#FFF1DA",
                 },
               ]}
             >
               <Icon
                 name={song.type === "AUDIO" ? "musical-note" : "document-text"}
-                color={song.type === "AUDIO" ? "#A8D1A6" : colors.gold}
+                color={song.type === "AUDIO" ? colors.success : colors.saffron}
               />
             </View>
             <View style={{ flex: 1 }}>
@@ -141,7 +141,7 @@ export default function SongsScreen() {
         ))}
       </View>
       <View style={s.info}>
-        <Icon name="shield-checkmark-outline" color="#87AE89" />
+        <Icon name="shield-checkmark-outline" color={colors.success} />
         <Text style={s.infoText}>
           This library is read-only for devotees. Temple administrators manage
           devotional content.
@@ -156,7 +156,7 @@ const s = StyleSheet.create({
     borderRadius: 22,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(135,174,137,.28)",
+    borderColor: "rgba(30,122,69,.22)",
     padding: 14,
     flexDirection: "row",
     alignItems: "center",
@@ -167,22 +167,22 @@ const s = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 17,
-    backgroundColor: "rgba(167,208,166,.14)",
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
   },
-  badge: { color: "#A7D0A6", fontSize: 8, letterSpacing: 1, fontWeight: "900" },
+  badge: { color: colors.success, fontSize: 8, letterSpacing: 1, fontWeight: "900" },
   featureTitle: {
-    color: colors.cream,
+    color: colors.text,
     fontSize: 15,
     fontWeight: "800",
     marginTop: 4,
   },
-  featureSub: { color: "#9CAF9A", fontSize: 10, marginTop: 5 },
+  featureSub: { color: colors.muted, fontSize: 10, marginTop: 5 },
   download: {
     minHeight: 82,
     borderRadius: 20,
-    backgroundColor: "#2C2110",
+    backgroundColor: "#FFF3D9",
     borderWidth: 1,
     borderColor: colors.line,
     padding: 13,
@@ -195,7 +195,7 @@ const s = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 16,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.goldFill,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -229,15 +229,15 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  title: { color: colors.cream, fontSize: 14, fontWeight: "800" },
+  title: { color: colors.text, fontSize: 14, fontWeight: "800" },
   type: { fontSize: 8, color: colors.gold, fontWeight: "900" },
   info: {
     marginTop: 15,
     padding: 13,
     flexDirection: "row",
     gap: 10,
-    backgroundColor: "rgba(72,99,70,.18)",
+    backgroundColor: colors.greenSoft,
     borderRadius: 14,
   },
-  infoText: { color: "#9FAF9E", fontSize: 11, lineHeight: 16, flex: 1 },
+  infoText: { color: "#3E5A46", fontSize: 11, lineHeight: 16, flex: 1 },
 });

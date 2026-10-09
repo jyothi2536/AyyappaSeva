@@ -4,7 +4,6 @@ import {
   Animated,
   ImageBackground,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -14,9 +13,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Icon } from "../components/UI";
 import PetalShower from "../components/PetalShower";
 import { startWelcomeReveal } from "../components/welcomeReveal";
-import { languages, onboardingCopy, TEMPLE, welcomeTempleImage } from "../data/content";
+import { TEMPLE, welcomeTempleImage } from "../data/content";
 import { useApp } from "../state/AppContext";
-import type { Language } from "../types";
 import { colors } from "../theme";
 
 type OnboardingScreenProps = {
@@ -28,12 +26,10 @@ export default function OnboardingScreen({
   returning = false,
   onComplete,
 }: OnboardingScreenProps) {
-  const { finishOnboarding, language } = useApp();
+  const { finishOnboarding } = useApp();
   const { width, height } = useWindowDimensions();
-  const [stage, setStage] = useState<"doors" | "language">("doors");
   const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
   const [petalsVisible, setPetalsVisible] = useState(false);
-  const [selected, setSelected] = useState<Language>(language);
   const left = useRef(new Animated.Value(0)).current;
   const right = useRef(new Animated.Value(0)).current;
   const petals = useRef(new Animated.Value(0)).current;
@@ -57,56 +53,13 @@ export default function OnboardingScreen({
     };
   }, []);
   useEffect(() => {
-    if (stage !== "doors" || reduceMotion === null) return;
+    if (reduceMotion === null) return;
     return startWelcomeReveal({
       left, right, petals, width, reduceMotion, returning,
       onPetalsVisible: setPetalsVisible,
       onComplete: () => completionRef.current?.(),
     });
-  }, [left, right, petals, width, reduceMotion, returning, stage]);
-  if (stage === "language") {
-    const copy = onboardingCopy[selected];
-    return (
-      <LinearGradient colors={["#090906", "#19160F"]} style={s.root}>
-        <SafeAreaView style={s.languagePage}>
-          <Text accessibilityRole="header" style={s.templeTitle}>
-            {TEMPLE.name}
-          </Text>
-          <Text style={s.title}>{copy.choose}</Text>
-          <Text style={s.subtitle}>{copy.chooseSub}</Text>
-          <View style={s.grid}>
-            {languages.map((item) => {
-              const active = item.id === selected;
-              return (
-                <Pressable
-                  key={item.id}
-                  onPress={() => setSelected(item.id)}
-                  style={[s.language, active && s.active]}
-                >
-                  <Text style={[s.native, active && { color: colors.ink }]}>
-                    {item.native}
-                  </Text>
-                  <Text style={[s.label, active && { color: "#67480D" }]}>
-                    {item.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          <Pressable
-            style={s.continue}
-            onPress={async () => {
-              await finishOnboarding(selected);
-              onComplete?.();
-            }}
-          >
-            <Text style={s.continueText}>{copy.continue}</Text>
-            <Icon name="arrow-forward" color={colors.ink} />
-          </Pressable>
-        </SafeAreaView>
-      </LinearGradient>
-    );
-  }
+  }, [left, right, petals, width, reduceMotion, returning]);
   return (
     <View style={s.root}>
       <ImageBackground
@@ -132,9 +85,10 @@ export default function OnboardingScreen({
           </Text>
           <Pressable
             style={s.next}
-            onPress={() =>
-              returning ? onComplete?.() : setStage("language")
-            }
+            onPress={async () => {
+              if (!returning) await finishOnboarding();
+              onComplete?.();
+            }}
           >
             <Text style={s.continueText}>{returning ? "Enter" : "Next"}</Text>
             <Icon name="arrow-forward" color={colors.ink} />
@@ -178,13 +132,13 @@ function Door() {
   );
 }
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#050402", overflow: "hidden" },
+  root: { flex: 1, backgroundColor: colors.surface, overflow: "hidden" },
   door: { position: "absolute", top: 0, bottom: 0, width: "50.5%" },
   left: { left: 0 },
   right: { right: 0 },
   doorPanel: {
     flex: 1,
-    borderColor: "#A96D24",
+    borderColor: colors.muted,
     borderWidth: 2,
     alignItems: "center",
     paddingHorizontal: 18,
@@ -195,7 +149,7 @@ const s = StyleSheet.create({
     height: 106,
     borderRadius: 53,
     borderWidth: 2,
-    borderColor: "#7F4C1B",
+    borderColor: colors.muted,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 54,
@@ -204,7 +158,7 @@ const s = StyleSheet.create({
     width: "100%",
     height: 138,
     borderWidth: 2,
-    borderColor: "#815020",
+    borderColor: colors.muted,
     marginBottom: 20,
     alignItems: "center",
     justifyContent: "center",
@@ -236,7 +190,7 @@ const s = StyleSheet.create({
     minWidth: 170,
     borderRadius: 27,
     paddingHorizontal: 26,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.goldFill,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -264,13 +218,13 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  active: { backgroundColor: colors.gold },
+  active: { backgroundColor: colors.goldFill },
   native: { color: colors.cream, fontSize: 18, fontWeight: "800" },
   label: { color: colors.muted, fontSize: 10, marginTop: 5 },
   continue: {
     height: 56,
     borderRadius: 18,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.goldFill,
     flexDirection: "row",
     gap: 10,
     alignItems: "center",

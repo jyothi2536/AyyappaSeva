@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 import {
   createNavigationContainerRef,
-  DarkTheme,
+  DefaultTheme,
   NavigationContainer,
   StackActions,
   useIsFocused,
@@ -16,6 +16,7 @@ import HomeScreen from "../screens/HomeScreen";
 import SongsScreen from "../screens/SongsScreen";
 import UpdatesScreen from "../screens/UpdatesScreen";
 import TempleScreen from "../screens/TempleScreen";
+import DeekshaScreen from "../screens/DeekshaScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import DownloadsScreen from "../screens/DownloadsScreen";
 import WallpapersScreen from "../screens/WallpapersScreen";
@@ -27,11 +28,16 @@ import AdminScreen from "../screens/AdminScreen";
 import AdminTempleEventScreen from "../screens/AdminTempleEventScreen";
 import AdminPadiPujaScreen from "../screens/AdminPadiPujaScreen";
 import AdminCalendarScreen from "../screens/AdminCalendarScreen";
+import AdminTodayScreen from "../screens/AdminTodayScreen";
+import DevoteeLoginScreen from "../screens/DevoteeLoginScreen";
+import DevoteeSignUpScreen from "../screens/DevoteeSignUpScreen";
+import BookPoojaScreen from "../screens/BookPoojaScreen";
+import ContactTempleScreen from "../screens/ContactTempleScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tabs = createBottomTabNavigator<TabParamList>();
 const navigationRef = createNavigationContainerRef<RootStackParamList>();
-const tabNames: AppTab[] = ["Home", "Songs", "Updates", "Temple", "Profile"];
+const tabNames: AppTab[] = ["Home", "Temple", "Updates", "Deeksha", "Songs", "Profile"];
 
 function withScreenMotion<Props extends object>(Screen: React.ComponentType<Props>) {
   return function MotionScreen(props: Props) {
@@ -81,6 +87,7 @@ const HomeScreenAnimated = withScreenMotion(HomeScreen);
 const SongsScreenAnimated = withScreenMotion(SongsScreen);
 const UpdatesScreenAnimated = withScreenMotion(UpdatesScreen);
 const TempleScreenAnimated = withScreenMotion(TempleScreen);
+const DeekshaScreenAnimated = withScreenMotion(DeekshaScreen);
 const ProfileScreenAnimated = withScreenMotion(ProfileScreen);
 const DownloadsScreenAnimated = withScreenMotion(DownloadsScreen);
 const WallpapersScreenAnimated = withScreenMotion(WallpapersScreen);
@@ -92,6 +99,11 @@ const AdminScreenAnimated = withScreenMotion(AdminScreen);
 const AdminTempleEventScreenAnimated = withScreenMotion(AdminTempleEventScreen);
 const AdminPadiPujaScreenAnimated = withScreenMotion(AdminPadiPujaScreen);
 const AdminCalendarScreenAnimated = withScreenMotion(AdminCalendarScreen);
+const AdminTodayScreenAnimated = withScreenMotion(AdminTodayScreen);
+const DevoteeLoginScreenAnimated = withScreenMotion(DevoteeLoginScreen);
+const DevoteeSignUpScreenAnimated = withScreenMotion(DevoteeSignUpScreen);
+const BookPoojaScreenAnimated = withScreenMotion(BookPoojaScreen);
+const ContactTempleScreenAnimated = withScreenMotion(ContactTempleScreen);
 
 function MainTabs() {
   return (
@@ -103,9 +115,10 @@ function MainTabs() {
       }}
     >
   <Tabs.Screen name="Home" component={HomeScreenAnimated} />
-  <Tabs.Screen name="Songs" component={SongsScreenAnimated} />
-  <Tabs.Screen name="Updates" component={UpdatesScreenAnimated} />
   <Tabs.Screen name="Temple" component={TempleScreenAnimated} />
+  <Tabs.Screen name="Updates" component={UpdatesScreenAnimated} />
+  <Tabs.Screen name="Deeksha" component={DeekshaScreenAnimated} />
+  <Tabs.Screen name="Songs" component={SongsScreenAnimated} />
   <Tabs.Screen name="Profile" component={ProfileScreenAnimated} />
     </Tabs.Navigator>
   );
@@ -133,12 +146,12 @@ export default function AppNavigator() {
           onReady={syncActiveTab}
           onStateChange={syncActiveTab}
           theme={{
-            ...DarkTheme,
+            ...DefaultTheme,
             colors: {
-              ...DarkTheme.colors,
-              background: colors.ink,
+              ...DefaultTheme.colors,
+              background: colors.background,
               card: colors.surface,
-              text: colors.cream,
+              text: colors.text,
               border: colors.line,
               primary: colors.gold,
             },
@@ -148,7 +161,7 @@ export default function AppNavigator() {
             screenOptions={{
               headerShown: false,
               presentation: "card",
-              contentStyle: { backgroundColor: colors.ink },
+              contentStyle: { backgroundColor: colors.background },
               animation: "fade_from_bottom",
             }}
           >
@@ -185,6 +198,15 @@ export default function AppNavigator() {
               component={AdminCalendarScreenAnimated}
               options={{ animation: "slide_from_right" }}
             />
+            <Stack.Screen
+              name="AdminToday"
+              component={AdminTodayScreenAnimated}
+              options={{ animation: "slide_from_right" }}
+            />
+            <Stack.Screen name="DevoteeLogin" component={DevoteeLoginScreenAnimated} options={{ animation: "slide_from_right" }} />
+            <Stack.Screen name="DevoteeSignUp" component={DevoteeSignUpScreenAnimated} options={{ animation: "slide_from_right" }} />
+            <Stack.Screen name="BookPooja" component={BookPoojaScreenAnimated} options={{ animation: "slide_from_right" }} />
+            <Stack.Screen name="ContactTemple" component={ContactTempleScreenAnimated} options={{ animation: "slide_from_right" }} />
           </Stack.Navigator>
         </NavigationContainer>
       </View>
@@ -193,7 +215,7 @@ export default function AppNavigator() {
   );
 }
 const s = StyleSheet.create({
-  shell: { flex: 1, backgroundColor: colors.ink },
+  shell: { flex: 1, backgroundColor: colors.background },
   content: { flex: 1 },
   screenMotion: { flex: 1 },
 });

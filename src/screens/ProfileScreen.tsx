@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Icon, Page, ScreenHeader } from "../components/UI";
-import { languages } from "../data/content";
 import { signOutToHome } from "../navigation/adminLogout";
 import { useApp } from "../state/AppContext";
 import type { RootStackParamList } from "../types";
@@ -12,32 +11,41 @@ import { colors } from "../theme";
 export default function ProfileScreen() {
   const {
     t,
-    language,
-    setLanguage,
     isAdmin,
     leaveAdmin,
     replayWelcome,
+    themeMode,
+    setThemeMode,
   } = useApp();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   return (
     <Page>
       <ScreenHeader eyebrow={t.account} title={t.profile} />
-      <Text style={s.section}>{t.language}</Text>
-      <View style={s.grid}>
-        {languages.map((item) => {
-          const active = item.id === language;
+      <Text style={s.section}>Theme</Text>
+      <View style={s.themeRow}>
+        {(
+          [
+            { mode: "light", label: "Light", icon: "sunny" },
+            { mode: "dark", label: "Dark", icon: "moon" },
+          ] as const
+        ).map((option) => {
+          const active = themeMode === option.mode;
           return (
             <Pressable
-              key={item.id}
-              onPress={() => setLanguage(item.id)}
-              style={[s.language, active && s.active]}
+              key={option.mode}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: active }}
+              onPress={() => setThemeMode(option.mode)}
+              style={[s.themeOption, active && s.themeOptionActive]}
             >
-              <Text style={[s.native, active && { color: colors.ink }]}>
-                {item.native}
-              </Text>
-              <Text style={[s.meta, active && { color: "#6B4A0D" }]}>
-                {item.label}
+              <Icon
+                name={active ? option.icon : `${option.icon}-outline`}
+                size={20}
+                color={active ? colors.ink : colors.gold}
+              />
+              <Text style={[s.themeLabel, active && s.themeLabelActive]}>
+                {option.label}
               </Text>
             </Pressable>
           );
@@ -67,10 +75,26 @@ export default function ProfileScreen() {
   );
 }
 const s = StyleSheet.create({
-  heroTitle: { color: colors.cream, fontSize: 15, fontWeight: "800" },
+  themeRow: { flexDirection: "row", gap: 10 },
+  themeOption: {
+    flex: 1,
+    height: 52,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.surface,
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  themeOptionActive: { backgroundColor: colors.goldFill, borderColor: colors.goldFill },
+  themeLabel: { color: colors.text, fontSize: 14, fontWeight: "700" },
+  themeLabelActive: { color: colors.ink },
+  heroTitle: { color: colors.text, fontSize: 15, fontWeight: "800" },
   meta: { color: colors.muted, fontSize: 10, lineHeight: 15, marginTop: 4 },
   section: {
-    color: colors.cream,
+    color: colors.text,
     fontSize: 20,
     fontWeight: "900",
     marginTop: 26,
@@ -85,8 +109,8 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  active: { backgroundColor: colors.gold },
-  native: { color: colors.cream, fontSize: 15, fontWeight: "800" },
+  active: { backgroundColor: colors.goldFill },
+  native: { color: colors.text, fontSize: 15, fontWeight: "800" },
   outline: {
     marginTop: 12,
     height: 48,
@@ -118,5 +142,5 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  signout: { color: "#CB7770", textAlign: "center", marginTop: 18 },
+  signout: { color: colors.muted, textAlign: "center", marginTop: 18 },
 });

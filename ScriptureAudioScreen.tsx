@@ -16,7 +16,7 @@ type ScriptureTrack = {
   copy: Record<ScriptureLanguage, LocalizedTrack>;
 };
 
-const palette = { ink: '#0B0B08', surface: '#15150F', gold: '#E9B949', cream: '#FFF3D6', muted: '#A8A38F', line: 'rgba(233,185,73,0.16)', green: '#344D36' };
+const palette = { ink: "#1C1710", surface: "#FFFFFF", gold: "#A8761A", cream: "#1F1A12", muted: "#6E6352", line: "rgba(120,90,40,0.16)", green: "#E4F0E6" };
 
 const ui: Record<ScriptureLanguage, Record<string, string>> = {
   en: { back: 'Sacred library', eyebrow: 'LISTEN OFFLINE', title: 'Sacred scripture audio', intro: 'Listen to Sanskrit recitations while reading the verse and meaning in your chosen language.', gita: 'BHAGAVAD GITA', ramayana: 'VALMIKI RAMAYANA', meaning: 'Meaning', play: 'Listen', pause: 'Pause', replay: 'Replay', offline: 'Included offline', credits: 'Audio sources & licenses', creditBody: 'Gita: NehalDaveND, CC BY-SA 4.0. Ramayana: Sriram Ghanapaati and Harisitarama Murti Ghanapaati, CC BY-SA 2.5 India. Source: Wikimedia Commons.', original: 'Original Sanskrit recitation' },
@@ -78,8 +78,9 @@ function formatTime(milliseconds: number) {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
-export default function ScriptureAudioScreen({ language, onBack }: { language: ScriptureLanguage; onBack: () => void }) {
-  const copy = ui[language];
+export default function ScriptureAudioScreen({ language, onBack, languagePicker }: { language: ScriptureLanguage; onBack: () => void; languagePicker?: React.ReactNode }) {
+  // The interface stays in English; only verses and meanings follow `language`.
+  const copy = ui.en;
   const soundRef = useRef<Audio.Sound | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -159,6 +160,7 @@ export default function ScriptureAudioScreen({ language, onBack }: { language: S
       <Text style={styles.eyebrow}>{copy.eyebrow}</Text>
       <Text style={styles.title}>{copy.title}</Text>
       <Text style={styles.intro}>{copy.intro}</Text>
+      {languagePicker ? <View style={{ marginBottom: 14 }}>{languagePicker}</View> : null}
       {renderCollection('gita')}
       {renderCollection('ramayana')}
       <View style={styles.credits}><Ionicons name="shield-checkmark-outline" size={23} color="#A7D0A6" /><View style={{ flex: 1 }}><Text style={styles.creditsTitle}>{copy.credits}</Text><Text style={styles.creditsBody}>{copy.creditBody}</Text></View></View>
@@ -172,11 +174,11 @@ const styles = StyleSheet.create({
   heroIcon: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(233,185,73,.1)', borderWidth: 1, borderColor: palette.line },
   eyebrow: { color: palette.gold, fontSize: 9, fontWeight: '900', letterSpacing: 2.2, marginTop: 18 }, title: { color: palette.cream, fontSize: 29, lineHeight: 35, fontWeight: '900', marginTop: 7 }, intro: { color: palette.muted, fontSize: 13, lineHeight: 20, marginTop: 9, marginBottom: 28 },
   sectionLabel: { color: palette.gold, fontSize: 10, fontWeight: '900', letterSpacing: 1.7, marginBottom: 11, marginTop: 6 },
-  card: { backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.line, borderRadius: 22, padding: 16, marginBottom: 13 }, cardActive: { borderColor: 'rgba(233,185,73,.48)', backgroundColor: '#1C1A11' },
-  cardTop: { flexDirection: 'row', alignItems: 'center', gap: 11 }, reference: { minWidth: 43, height: 43, paddingHorizontal: 7, borderRadius: 13, backgroundColor: '#3B2D16', alignItems: 'center', justifyContent: 'center' }, referenceText: { color: palette.gold, fontSize: 10, fontWeight: '900' },
+  card: { backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.line, borderRadius: 22, padding: 16, marginBottom: 13 }, cardActive: { borderColor: 'rgba(233,185,73,.48)', backgroundColor: '#FFF8EA' },
+  cardTop: { flexDirection: 'row', alignItems: 'center', gap: 11 }, reference: { minWidth: 43, height: 43, paddingHorizontal: 7, borderRadius: 13, backgroundColor: '#FFF1DA', alignItems: 'center', justifyContent: 'center' }, referenceText: { color: palette.gold, fontSize: 10, fontWeight: '900' },
   trackTitle: { color: palette.cream, fontSize: 14, lineHeight: 18, fontWeight: '800' }, trackMeta: { color: palette.muted, fontSize: 8, marginTop: 4 }, offlinePill: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(72,99,70,.22)', paddingHorizontal: 7, paddingVertical: 6, borderRadius: 99 }, offlineText: { color: '#A7D0A6', fontSize: 7, fontWeight: '800' },
-  verse: { color: '#F8E6BB', fontFamily: 'serif', fontSize: 16, lineHeight: 27, marginTop: 18 }, meaningLabel: { color: palette.gold, fontSize: 8, fontWeight: '900', letterSpacing: 1.4, marginTop: 18 }, meaning: { color: palette.muted, fontSize: 12, lineHeight: 19, marginTop: 6 },
-  progressTrack: { height: 3, borderRadius: 2, backgroundColor: 'rgba(233,185,73,.12)', overflow: 'hidden', marginTop: 18 }, progressFill: { height: '100%', backgroundColor: palette.gold }, playerRow: { flexDirection: 'row', alignItems: 'center', marginTop: 13 },
-  playButton: { height: 42, borderRadius: 13, backgroundColor: palette.gold, flexDirection: 'row', gap: 7, paddingHorizontal: 15, alignItems: 'center' }, playText: { color: palette.ink, fontSize: 11, fontWeight: '900' }, time: { color: palette.muted, fontSize: 10, marginLeft: 12, flex: 1 }, sourceButton: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
-  credits: { flexDirection: 'row', gap: 11, borderRadius: 18, padding: 15, marginTop: 12, backgroundColor: 'rgba(72,99,70,.16)', borderWidth: 1, borderColor: 'rgba(135,174,137,.16)' }, creditsTitle: { color: '#C5DFC4', fontSize: 12, fontWeight: '800' }, creditsBody: { color: '#8FA08E', fontSize: 9, lineHeight: 15, marginTop: 5 },
+  verse: { color: '#1F1A12', fontFamily: 'serif', fontSize: 16, lineHeight: 27, marginTop: 18 }, meaningLabel: { color: palette.gold, fontSize: 8, fontWeight: '900', letterSpacing: 1.4, marginTop: 18 }, meaning: { color: palette.muted, fontSize: 12, lineHeight: 19, marginTop: 6 },
+  progressTrack: { height: 3, borderRadius: 2, backgroundColor: 'rgba(233,185,73,.12)', overflow: 'hidden', marginTop: 18 }, progressFill: { height: '100%', backgroundColor: '#EBC062' }, playerRow: { flexDirection: 'row', alignItems: 'center', marginTop: 13 },
+  playButton: { height: 42, borderRadius: 13, backgroundColor: '#EBC062', flexDirection: 'row', gap: 7, paddingHorizontal: 15, alignItems: 'center' }, playText: { color: palette.ink, fontSize: 11, fontWeight: '900' }, time: { color: palette.muted, fontSize: 10, marginLeft: 12, flex: 1 }, sourceButton: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
+  credits: { flexDirection: 'row', gap: 11, borderRadius: 18, padding: 15, marginTop: 12, backgroundColor: 'rgba(72,99,70,.16)', borderWidth: 1, borderColor: 'rgba(135,174,137,.16)' }, creditsTitle: { color: '#1E7A45', fontSize: 12, fontWeight: '800' }, creditsBody: { color: '#6E6352', fontSize: 9, lineHeight: 15, marginTop: 5 },
 });

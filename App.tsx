@@ -1,3 +1,4 @@
+import "./src/themeRuntime";
 import React, { useCallback, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,7 +12,8 @@ import { AppProvider, useApp } from "./src/state/AppContext";
 import { colors } from "./src/theme";
 
 function AppContent() {
-  const { storageReady, onboardingComplete } = useApp();
+  const { storageReady, onboardingComplete, themeMode } = useApp();
+  const statusStyle = themeMode === "dark" ? "light" : "dark";
   const [launchWelcomeComplete, setLaunchWelcomeComplete] = useState(false);
   const completeLaunchWelcome = useCallback(
     () => setLaunchWelcomeComplete(true),
@@ -20,7 +22,7 @@ function AppContent() {
   if (!storageReady)
     return (
       <View style={styles.loading}>
-        <StatusBar style="light" />
+        <StatusBar style={statusStyle} />
         <Icon name="flame" size={34} color={colors.gold} />
       </View>
     );
@@ -34,8 +36,9 @@ function AppContent() {
   if (!onboardingComplete) return <OnboardingScreen />;
   return (
     <>
-      <StatusBar style="light" />
-      <AppNavigator />
+      <StatusBar style={statusStyle} />
+      {/* Remount on theme change so every screen re-reads the theme colours. */}
+      <AppNavigator key={themeMode} />
     </>
   );
 }
@@ -45,7 +48,7 @@ export default function App() {
   if (!iconsLoaded && !iconsError) {
     return (
       <View style={styles.loading}>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
         <Text style={styles.loadingMark}>◆</Text>
       </View>
     );
@@ -62,7 +65,7 @@ export default function App() {
 const styles = StyleSheet.create({
   loading: {
     flex: 1,
-    backgroundColor: colors.ink,
+    backgroundColor: colors.background,
     alignItems: "center",
     justifyContent: "center",
   },

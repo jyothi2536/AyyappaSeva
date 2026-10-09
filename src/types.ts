@@ -75,11 +75,32 @@ export type Wallpaper = {
 };
 export type BuiltInDocument = Song & { assetSource: number; category: string };
 
+export type DeityKey =
+  | "ayyappa"
+  | "ganapathi"
+  | "shiva"
+  | "vishnu"
+  | "devi"
+  | "murugan"
+  | "hanuman";
+
+export type ScheduleItem = { time: string; name: string };
+
+export type TodaySchedule = {
+  /** YYYY-MM-DD the schedule applies to */
+  date: string;
+  openTime: string;
+  closeTime: string;
+  deity: DeityKey;
+  items: ScheduleItem[];
+};
+
 export type TabParamList = {
   Home: undefined;
   Songs: undefined;
   Updates: undefined;
   Temple: undefined;
+  Deeksha: undefined;
   Profile: undefined;
 };
 
@@ -95,4 +116,22 @@ export type RootStackParamList = {
   AdminTempleEvent: { eventId?: string } | undefined;
   AdminPadiPuja: { eventId?: string } | undefined;
   AdminCalendar: undefined;
+  AdminToday: undefined;
+  DevoteeLogin: { next?: "BookPooja" } | undefined;
+  DevoteeSignUp: { next?: "BookPooja" } | undefined;
+  BookPooja: undefined;
+  ContactTemple: undefined;
 };
+
+/** A highlighted festival/event shown in the Home "Upcoming Major Event" section. */
+export type MajorEvent = {
+  id: string;
+  title: string;
+  /** ISO date YYYY-MM-DD */
+  startDate: string;
+  /** ISO date YYYY-MM-DD (same as start for one-day events) */
+  endDate: string;
+  location: string;
+  details: string;
+};
+export type MajorEventInput = Omit<MajorEvent, "id">;

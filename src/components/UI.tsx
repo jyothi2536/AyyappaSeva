@@ -7,7 +7,7 @@ export type IconName = React.ComponentProps<typeof Ionicons>["name"];
 export function Icon({
   name,
   size = 22,
-  color = colors.cream,
+  color = colors.text,
 }: {
   name: IconName;
   size?: number;
@@ -130,7 +130,7 @@ export function Card({
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.ink },
+  root: { flex: 1, backgroundColor: colors.background },
   scroll: { paddingBottom: 115 },
   page: {
     paddingHorizontal: 18,
@@ -144,17 +144,18 @@ const s = StyleSheet.create({
     fontWeight: "900",
   },
   title: {
-    color: colors.cream,
-    fontSize: 34,
-    lineHeight: 41,
-    fontWeight: "900",
+    color: colors.text,
+    fontSize: 32,
+    lineHeight: 40,
+    fontWeight: "700",
+    fontFamily: "serif",
     marginTop: 8,
   },
   rule: {
     width: 38,
     height: 3,
     borderRadius: 2,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.goldFill,
     marginTop: 15,
   },
   subtitle: {
@@ -166,7 +167,7 @@ const s = StyleSheet.create({
   button: {
     minHeight: 52,
     borderRadius: 16,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.goldFill,
     paddingHorizontal: 18,
     flexDirection: "row",
     gap: 9,
@@ -174,9 +175,9 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   secondary: {
-    backgroundColor: "transparent",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "rgba(233,185,73,.42)",
+    borderColor: "rgba(168,118,26,.4)",
   },
   buttonText: { color: colors.ink, fontWeight: "900", fontSize: 13 },
   back: {
@@ -189,9 +190,9 @@ const s = StyleSheet.create({
     marginBottom: 12,
     paddingHorizontal: 13,
     borderRadius: 16,
-    backgroundColor: "rgba(233,185,73,.1)",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "rgba(233,185,73,.24)",
+    borderColor: colors.line,
   },
   backCompact: {
     minHeight: 48,
@@ -205,5 +206,10 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
     padding: 16,
+    shadowColor: "#6B4A12",
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 1,
   },
 });

@@ -15,6 +15,7 @@ import {
   harivarasanamUi,
 } from "../../HarivarasanamLyrics";
 import { BackButton, Icon } from "../components/UI";
+import { LyricsLanguagePicker } from "../components/LyricsLanguagePicker";
 import { useApp } from "../state/AppContext";
 import type { RootStackParamList } from "../types";
 import { colors } from "../theme";
@@ -22,10 +23,11 @@ import { colors } from "../theme";
 export default function HarivarasanamScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, "Harivarasanam">) {
-  const { language, t } = useApp();
+  const { language, lyricsLanguage, t } = useApp();
   const [view, setView] = useState<"video" | "lyrics">("video");
   const [loading, setLoading] = useState(true);
   const ui = harivarasanamUi[language];
+  const lyricsUi = harivarasanamUi[lyricsLanguage];
   return (
     <View style={s.root}>
       <View style={s.header}>
@@ -84,15 +86,16 @@ export default function HarivarasanamScreen({
         </>
       ) : (
         <ScrollView contentContainerStyle={s.content}>
-          <View style={s.badge}>
+          <LyricsLanguagePicker />
+          <View style={[s.badge, { marginTop: 14 }]}>
             <Icon name="cloud-done" color="#A7D0A6" />
             <Text style={s.badgeText}>{ui.offline}</Text>
           </View>
           <Text style={s.heading}>Harivarasanam</Text>
-          <Text style={s.meta}>{ui.source}</Text>
+          <Text style={s.meta}>{lyricsUi.source}</Text>
           <View style={s.rule} />
           <Text selectable style={s.lyrics}>
-            {harivarasanamLyrics[language]}
+            {harivarasanamLyrics[lyricsLanguage]}
           </Text>
         </ScrollView>
       )}
@@ -120,7 +123,7 @@ function Tab({
 const s = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.ink,
+    backgroundColor: colors.background,
   },
   header: {
     minHeight: 92,
@@ -132,13 +135,13 @@ const s = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.line,
   },
-  title: { color: colors.cream, fontSize: 16, fontWeight: "900" },
+  title: { color: colors.text, fontSize: 16, fontWeight: "900" },
   meta: { color: colors.muted, fontSize: 10, marginTop: 5 },
   tabs: {
     flexDirection: "row",
     gap: 9,
     padding: 11,
-    backgroundColor: "#0E0E0A",
+    backgroundColor: colors.surface,
   },
   tab: {
     flex: 1,
@@ -151,7 +154,7 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(233,185,73,.3)",
   },
-  tabActive: { backgroundColor: colors.gold },
+  tabActive: { backgroundColor: colors.goldFill },
   tabText: { color: colors.gold, fontSize: 12, fontWeight: "900" },
   web: { flex: 1, backgroundColor: "#000" },
   loading: {
@@ -159,7 +162,7 @@ const s = StyleSheet.create({
     zIndex: 2,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.ink,
+    backgroundColor: colors.background,
   },
   notice: {
     margin: 13,
@@ -169,7 +172,7 @@ const s = StyleSheet.create({
     gap: 11,
     backgroundColor: "rgba(72,99,70,.18)",
   },
-  noticeText: { color: "#9FAF9E", fontSize: 10, lineHeight: 16, flex: 1 },
+  noticeText: { color: colors.muted, fontSize: 10, lineHeight: 16, flex: 1 },
   content: { padding: 21, paddingBottom: 60 },
   badge: {
     alignSelf: "flex-start",
@@ -181,9 +184,9 @@ const s = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(72,99,70,.25)",
   },
-  badgeText: { color: "#A7D0A6", fontSize: 10, fontWeight: "800" },
+  badgeText: { color: colors.muted, fontSize: 10, fontWeight: "800" },
   heading: {
-    color: colors.cream,
+    color: colors.text,
     fontSize: 28,
     fontWeight: "900",
     marginTop: 21,
@@ -191,7 +194,7 @@ const s = StyleSheet.create({
   rule: {
     width: 40,
     height: 3,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.goldFill,
     marginVertical: 18,
   },
   lyrics: {

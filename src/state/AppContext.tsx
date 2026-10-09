@@ -16,6 +16,7 @@ import {
   type Copy,
 } from "../data/content";
 import { eventTranslations, initialCalendarEvents } from "../data/events";
+import { applyTheme, currentThemeMode, type ThemeMode } from "../theme";
 import {
   cancelEventReminders,
   scheduleEventReminders,
@@ -51,7 +52,10 @@ type AppState = {
   cloudConfigured: boolean;
   cloudConnected: boolean;
   onboardingComplete: boolean;
+  /** App UI language. The app interface is English-only. */
   language: Language;
+  /** Language used to display devotional lyrics/documents in the music section. */
+  lyricsLanguage: Language;
   t: Copy;
   songs: Song[];
   updates: Update[];
@@ -60,8 +64,11 @@ type AppState = {
   isAdmin: boolean;
   adminSession: AdminSession | null;
   adminAccounts: AdminAccount[];
-  setLanguage: (language: Language) => void;
-  finishOnboarding: (language: Language) => Promise<void>;
+  setLyricsLanguage: (language: Language) => void;
+  /** App colour theme chosen by the user. */
+  themeMode: ThemeMode;
+  setThemeMode: (mode: ThemeMode) => void;
+  finishOnboarding: () => Promise<void>;
   replayWelcome: () => void;
   uploadSong: () => Promise<void>;
   authenticateAdmin: (username: string, password: string) => Promise<void>;
@@ -75,12 +82,16 @@ type AppState = {
 };
 
 const Context = createContext<AppState | null>(null);
+const APP_LANGUAGE: Language = "en";
+const lyricsLanguages: readonly Language[] = ["en", "te", "ta", "kn"];
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [storageReady, setStorageReady] = useState(false);
   const [cloudConnected, setCloudConnected] = useState(false);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
-  const [language, setLanguageState] = useState<Language>("en");
+  const language = APP_LANGUAGE;
+  const [lyricsLanguage, setLyricsLanguageState] = useState<Language>("en");
+  const [themeMode, setThemeModeState] = useState<ThemeMode>(currentThemeMode());
   const [songs, setSongs] = useState<Song[]>(initialSongs);
   const [updates, setUpdates] = useState<Update[]>(initialUpdates);
   const [events, setEvents] = useState<CalendarEvent[]>(initialCalendarEvents);
@@ -92,15 +103,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       try {
         const saved = await AsyncStorage.multiGet([
+          "lyricsLanguage",
           "language",
           "songs",
           "updates",
           "calendarEvents",
           "admin",
           "onboardingComplete",
+          "themeMode",
         ]);
         const values = Object.fromEntries(saved);
-        if (values.language) setLanguageState(values.language as Language);
+        if (values.themeMode === "dark" || values.themeMode === "light") {
+          // Apply before the first themed render.
+          applyTheme(values.themeMode);
+          setThemeModeState(values.themeMode);
+        }
+        // Older installs stored a UI language; reuse it as the lyrics preference.
+        const savedLyrics = values.lyricsLanguage ?? values.language;
+        if (savedLyrics && lyricsLanguages.includes(savedLyrics as Language))
+          setLyricsLanguageState(savedLyrics as Language);
         if (values.songs) setSongs(JSON.parse(values.songs));
         if (values.updates) setUpdates(JSON.parse(values.updates));
         if (values.calendarEvents)
@@ -151,17 +172,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [adminSession?.role]);
 
-  const setLanguage = (value: Language) => {
-    setLanguageState(value);
-    AsyncStorage.setItem("language", value);
+  const setThemeMode = (next: ThemeMode) => {
+    applyTheme(next);
+    setThemeModeState(next);
+    void AsyncStorage.setItem("themeMode", next).catch(() => undefined);
   };
-  const finishOnboarding = async (value: Language) => {
-    setLanguageState(value);
+  const setLyricsLanguage = (value: Language) => {
+    setLyricsLanguageState(value);
+    void AsyncStorage.setItem("lyricsLanguage", value);
+  };
+  const finishOnboarding = async () => {
     setOnboardingComplete(true);
-    await AsyncStorage.multiSet([
-      ["language", value],
-      ["onboardingComplete", "true"],
-    ]);
+    await AsyncStorage.setItem("onboardingComplete", "true");
   };
   const replayWelcome = () => {
     setOnboardingComplete(false);
@@ -287,10 +309,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<AppState>(
     () => ({
       storageReady,
+      themeMode,
+      setThemeMode,
       cloudConfigured: firebaseConfigured,
       cloudConnected,
       onboardingComplete,
       language,
+      lyricsLanguage,
       t: translations[language],
       songs,
       updates,
@@ -299,7 +324,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       isAdmin,
       adminSession,
       adminAccounts,
-      setLanguage,
+      setLyricsLanguage,
       finishOnboarding,
       replayWelcome,
       uploadSong,
@@ -314,9 +339,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       storageReady,
+      themeMode,
       cloudConnected,
       onboardingComplete,
-      language,
+      lyricsLanguage,
       songs,
       updates,
       events,

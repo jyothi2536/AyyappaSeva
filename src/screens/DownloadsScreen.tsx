@@ -103,7 +103,7 @@ const s = StyleSheet.create({
   all: {
     height: 52,
     borderRadius: 16,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.goldFill,
     flexDirection: "row",
     gap: 9,
     alignItems: "center",
@@ -127,7 +127,7 @@ const s = StyleSheet.create({
     width: 62,
     height: 76,
     borderRadius: 14,
-    backgroundColor: "#3D2B11",
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -139,7 +139,7 @@ const s = StyleSheet.create({
     letterSpacing: 1.3,
   },
   title: {
-    color: colors.cream,
+    color: colors.text,
     fontSize: 14,
     lineHeight: 18,
     fontWeight: "800",
@@ -155,5 +155,5 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  actionReady: { backgroundColor: colors.gold },
+  actionReady: { backgroundColor: colors.goldFill },
 });
