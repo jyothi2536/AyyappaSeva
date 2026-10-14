@@ -598,4 +598,4 @@ export const wallpapers = [
   },
 ] as const satisfies readonly Wallpaper[];
 export const homeTempleImage = require("../../assets/temple/ayyappa4.jpg");
-export const welcomeTempleImage = require("../../assets/temple/atlanta-ayyappa-welcome-floral.jpg");
+export const welcomeTempleImage = require("../../assets/temple/ayyappa-home-new.jpeg");

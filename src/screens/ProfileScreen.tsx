@@ -55,17 +55,6 @@ export default function ProfileScreen() {
         <Icon name="refresh" color={colors.gold} />
         <Text style={s.outlineText}>{t.welcomeAgain}</Text>
       </Pressable>
-      <Text style={s.section}>{t.admin}</Text>
-      <Pressable style={s.admin} onPress={() => navigation.navigate("Admin")}>
-        <View style={s.adminIcon}>
-          <Icon name="shield-checkmark" color={colors.gold} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={s.heroTitle}>{t.admin}</Text>
-          <Text style={s.meta}>{t.adminSub}</Text>
-        </View>
-        <Icon name="chevron-forward" color={colors.gold} />
-      </Pressable>
       {isAdmin && (
         <Pressable onPress={() => void signOutToHome(leaveAdmin, navigation)}>
           <Text style={s.signout}>{t.signout}</Text>

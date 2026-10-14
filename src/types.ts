@@ -121,6 +121,8 @@ export type RootStackParamList = {
   DevoteeSignUp: { next?: "BookPooja" } | undefined;
   BookPooja: undefined;
   ContactTemple: undefined;
+  Irumudi: undefined;
+  IrumudiRegistration: undefined;
 };
 
 /** A highlighted festival/event shown in the Home "Upcoming Major Event" section. */

@@ -9,7 +9,12 @@ import {
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { AppFooter, AppHeader, type AppTab } from "../components/AppChrome";
+import {
+  AppFooter,
+  AppHeader,
+  type AppTab,
+  type MenuTarget,
+} from "../components/AppChrome";
 import type { RootStackParamList, TabParamList } from "../types";
 import { colors } from "../theme";
 import HomeScreen from "../screens/HomeScreen";
@@ -33,6 +38,8 @@ import DevoteeLoginScreen from "../screens/DevoteeLoginScreen";
 import DevoteeSignUpScreen from "../screens/DevoteeSignUpScreen";
 import BookPoojaScreen from "../screens/BookPoojaScreen";
 import ContactTempleScreen from "../screens/ContactTempleScreen";
+import IrumudiScreen from "../screens/IrumudiScreen";
+import IrumudiRegistrationScreen from "../screens/IrumudiRegistrationScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tabs = createBottomTabNavigator<TabParamList>();
@@ -104,6 +111,8 @@ const DevoteeLoginScreenAnimated = withScreenMotion(DevoteeLoginScreen);
 const DevoteeSignUpScreenAnimated = withScreenMotion(DevoteeSignUpScreen);
 const BookPoojaScreenAnimated = withScreenMotion(BookPoojaScreen);
 const ContactTempleScreenAnimated = withScreenMotion(ContactTempleScreen);
+const IrumudiScreenAnimated = withScreenMotion(IrumudiScreen);
+const IrumudiRegistrationScreenAnimated = withScreenMotion(IrumudiRegistrationScreen);
 
 function MainTabs() {
   return (
@@ -137,9 +146,22 @@ export default function AppNavigator() {
       navigationRef.dispatch(StackActions.popTo("MainTabs", { screen: tab }));
     }
   }, []);
+  const navigateFromMenu = useCallback(
+    (target: MenuTarget) => {
+      if ("tab" in target) {
+        navigateToTab(target.tab);
+      } else if (navigationRef.isReady()) {
+        navigationRef.navigate(target.route);
+      }
+    },
+    [navigateToTab],
+  );
   return (
     <View style={s.shell}>
-      <AppHeader onUpdates={() => navigateToTab("Updates")} />
+      <AppHeader
+        onUpdates={() => navigateToTab("Updates")}
+        onMenuNavigate={navigateFromMenu}
+      />
       <View style={s.content}>
         <NavigationContainer
           ref={navigationRef}
@@ -207,6 +229,8 @@ export default function AppNavigator() {
             <Stack.Screen name="DevoteeSignUp" component={DevoteeSignUpScreenAnimated} options={{ animation: "slide_from_right" }} />
             <Stack.Screen name="BookPooja" component={BookPoojaScreenAnimated} options={{ animation: "slide_from_right" }} />
             <Stack.Screen name="ContactTemple" component={ContactTempleScreenAnimated} options={{ animation: "slide_from_right" }} />
+            <Stack.Screen name="Irumudi" component={IrumudiScreenAnimated} options={{ animation: "slide_from_right" }} />
+            <Stack.Screen name="IrumudiRegistration" component={IrumudiRegistrationScreenAnimated} options={{ animation: "slide_from_right" }} />
           </Stack.Navigator>
         </NavigationContainer>
       </View>

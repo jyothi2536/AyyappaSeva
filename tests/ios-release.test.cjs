@@ -23,6 +23,15 @@ test("iOS native identity and both build configurations agree with Expo", () => 
   assert.match(plist, /<key>CFBundleVersion<\/key>\s*<string>\$\(CURRENT_PROJECT_VERSION\)<\/string>/);
 });
 
+test("iOS uses the UIScene life cycle (required to launch on iOS 27+)", () => {
+  assert.match(plist, /<key>UIApplicationSceneManifest<\/key>/);
+  assert.match(plist, /<key>UISceneDelegateClassName<\/key>\s*<string>SceneDelegate<\/string>/);
+  const delegate = read("ios/AyyappaSeva/AppDelegate.swift");
+  assert.match(delegate, /@objc\(SceneDelegate\)\s*class SceneDelegate: UIResponder, UIWindowSceneDelegate/);
+  assert.match(delegate, /UIWindow\(windowScene:/);
+  assert.doesNotMatch(delegate, /UIWindow\(frame: UIScreen\.main\.bounds\)/);
+});
+
 test("Expo supports the iOS-only version without changing the Android version", () => {
   assert.equal(IOSConfig.Version.getVersion(app), app.ios.version);
   const gradle = read("android/app/build.gradle");

@@ -84,9 +84,9 @@ for (const language of ["en"]) {
       assert.equal(Object.hasOwn(state.t, "registered"), false);
 
       const buttons = tree.filter((node) => node.type === "Pressable");
-      assert.equal(buttons.length, isAdmin ? 5 : 4);
+      assert.equal(buttons.length, isAdmin ? 4 : 3);
       for (const button of buttons) button.props.onPress();
-      assert.deepEqual(navigated, ["Admin"], "The only login route is Admin");
+      assert.deepEqual(navigated, [], "Admin login lives in the menu, not Profile");
       assert.deepEqual(selectedThemes, ["light", "dark"], "Profile offers light and dark themes");
       assert.deepEqual(selectedLanguages, [], "Profile no longer changes the UI language");
       assert.equal(welcomeCount, 1);

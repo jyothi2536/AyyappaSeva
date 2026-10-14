@@ -16,7 +16,9 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Icon } from "../components/UI";
 import { getHomeTempleFraming } from "../components/homeTempleFraming";
-import { homeTempleImage, wallpapers } from "../data/content";
+import { homeTempleImage } from "../data/content";
+import { eventStart, formatEventDate, localize } from "../data/events";
+import { verseOfTheDay } from "../data/dailyScripture";
 import { useDevotee } from "../services/devotee";
 import { deityImage, isOpenNow, useTodaySchedule } from "../data/today";
 import { useApp } from "../state/AppContext";
@@ -24,7 +26,15 @@ import type { RootStackParamList, TabParamList } from "../types";
 import { colors } from "../theme";
 
 export default function HomeScreen() {
-  const { t } = useApp();
+  const { t, events, language, updates } = useApp();
+  const verse = verseOfTheDay();
+  const latestUpdates = [...updates]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 3);
+  const now = Date.now();
+  const nextEvent = events
+    .filter((e) => e.kind === "temple" && eventStart(e).getTime() >= now)
+    .sort((a, b) => eventStart(a).getTime() - eventStart(b).getTime())[0];
   const today = useTodaySchedule();
   const devotee = useDevotee();
   const open = isOpenNow(today);
@@ -150,27 +160,104 @@ export default function HomeScreen() {
             <Text style={s.quickSub}>Get in Touch</Text>
           </Pressable>
         </View>
-        <Pressable
-          style={s.wallpaper}
-          onPress={() => root?.navigate("Wallpapers")}
-        >
-          <ImageBackground
-            source={wallpapers[0].source}
-            style={StyleSheet.absoluteFill}
-            imageStyle={{ resizeMode: "cover" }}
-          />
-          <LinearGradient
-            colors={["transparent", "rgba(11,11,8,.94)"]}
-            style={StyleSheet.absoluteFill}
-          />
-          <View style={s.wallpaperCopy}>
-            <Text style={s.wallpaperTitle}>{t.wallpaperTitle}</Text>
-            <Text style={s.wallpaperSub}>{t.wallpaperSub}</Text>
+        <Title text="Upcoming Major Event" />
+        {nextEvent ? (
+          <Pressable
+            accessibilityRole="button"
+            style={({ pressed }) => [s.major, pressed && { opacity: 0.8 }]}
+            onPress={() => tab.navigate("Updates")}
+          >
+            <View style={s.eventDate}>
+              <Text style={s.eventMonth}>
+                {eventStart(nextEvent)
+                  .toLocaleString("en-US", { month: "short" })
+                  .toUpperCase()}
+              </Text>
+              <Text style={s.eventDay}>{eventStart(nextEvent).getDate()}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.majorTitle} numberOfLines={2}>
+                {localize(nextEvent.title, language)}
+              </Text>
+              <View style={s.eventMeta}>
+                <Icon name="calendar-outline" size={14} color={colors.gold} />
+                <Text style={s.eventMetaText}>
+                  {formatEventDate(nextEvent, language)} · {nextEvent.startTime}
+                </Text>
+              </View>
+              {nextEvent.venue ? (
+                <View style={s.eventMeta}>
+                  <Icon name="location-outline" size={14} color={colors.gold} />
+                  <Text style={s.eventMetaText} numberOfLines={1}>
+                    {nextEvent.venue}
+                  </Text>
+                </View>
+              ) : null}
+              {localize(nextEvent.description, language) ? (
+                <Text style={s.eventDesc} numberOfLines={2}>
+                  {localize(nextEvent.description, language)}
+                </Text>
+              ) : null}
+            </View>
+            <Icon name="chevron-forward" size={20} color={colors.goldFill} />
+          </Pressable>
+        ) : (
+          <View style={[s.major, s.eventEmpty]}>
+            <Icon name="calendar-clear-outline" size={22} color={colors.goldFill} />
+            <Text style={s.eventMetaText}>
+              No upcoming events scheduled. Please check back soon.
+            </Text>
           </View>
-        </Pressable>
-        <Title
-          text={t.latest}
-        />
+        )}
+        <View style={s.pairRow}>
+          <Pressable
+            accessibilityRole="button"
+            style={({ pressed }) => [s.pairCard, pressed && { opacity: 0.8 }]}
+            onPress={() => tab.navigate("Updates")}
+          >
+            <View style={s.pairHead}>
+              <View style={s.pairIcon}>
+                <Icon name="megaphone-outline" size={18} color={colors.maroon} />
+              </View>
+              <Text style={s.pairTitle}>Latest Updates</Text>
+            </View>
+            {latestUpdates.length === 0 ? (
+              <Text style={s.pairEmpty}>No updates yet.</Text>
+            ) : (
+              latestUpdates.map((u) => (
+                <View key={u.id} style={s.updateRow}>
+                  <View style={s.updateDot} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.updateTitle} numberOfLines={2}>
+                      {u.title}
+                    </Text>
+                    <Text style={s.updateDate}>{u.date}</Text>
+                  </View>
+                </View>
+              ))
+            )}
+            <Text style={s.pairLink}>View all ›</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            style={({ pressed }) => [s.pairCard, pressed && { opacity: 0.8 }]}
+            onPress={() => root?.navigate("Scriptures")}
+          >
+            <View style={s.pairHead}>
+              <View style={s.pairIcon}>
+                <Icon name="book-outline" size={18} color={colors.maroon} />
+              </View>
+              <Text style={s.pairTitle}>Scripture of the Day</Text>
+            </View>
+            <Text style={s.verseText} numberOfLines={5}>
+              “{verse.text}”
+            </Text>
+            <Text style={s.verseMeaning} numberOfLines={5}>
+              {verse.meaning}
+            </Text>
+            <Text style={s.verseSource}>— {verse.source}</Text>
+          </Pressable>
+        </View>
       </View>
     </ScrollView>
   );
@@ -376,16 +463,80 @@ const s = StyleSheet.create({
     textAlign: "center",
   },
   quickSub: { color: colors.muted, fontSize: 10, marginTop: 3, textAlign: "center" },
-  wallpaper: {
-    height: 220,
-    borderRadius: 24,
-    overflow: "hidden",
-    marginTop: 22,
-    justifyContent: "flex-end",
+  major: {
+    marginTop: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    padding: 16,
+    borderRadius: 18,
+    backgroundColor: colors.maroonDeep,
+    borderWidth: 1,
+    borderColor: colors.goldFill,
+  },
+  eventEmpty: { justifyContent: "center" },
+  eventDate: {
+    width: 58,
+    paddingVertical: 8,
+    borderRadius: 12,
+    alignItems: "center",
+    backgroundColor: colors.goldFill,
+  },
+  eventMonth: { color: colors.maroonDeep, fontSize: 11, fontWeight: "800", letterSpacing: 1 },
+  eventDay: { color: colors.maroonDeep, fontSize: 24, fontWeight: "900" },
+  majorTitle: {
+    color: colors.goldFill,
+    fontSize: 17,
+    fontWeight: "700",
+    fontFamily: "serif",
+    marginBottom: 4,
+  },
+  eventMeta: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 },
+  eventMetaText: { color: colors.cream, fontSize: 12, flexShrink: 1 },
+  eventDesc: { color: "rgba(255,246,227,.8)", fontSize: 12, marginTop: 6, lineHeight: 17 },
+  pairRow: { flexDirection: "row", gap: 12, marginTop: 22, alignItems: "stretch" },
+  pairCard: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.line,
+    shadowColor: "#6B4A12",
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
-  wallpaperCopy: { padding: 17 },
-  wallpaperTitle: { color: colors.cream, fontSize: 20, fontWeight: "900" },
-  wallpaperSub: { color: "rgba(255,246,227,.8)", fontSize: 11, marginTop: 5 },
+  pairHead: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 },
+  pairIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.maroonSoft,
+  },
+  pairTitle: {
+    flex: 1,
+    color: colors.maroon,
+    fontSize: 14,
+    fontWeight: "700",
+    fontFamily: "serif",
+  },
+  pairEmpty: { color: colors.muted, fontSize: 12 },
+  pairLink: { color: colors.saffron, fontSize: 12, fontWeight: "700", marginTop: "auto", paddingTop: 8 },
+  updateRow: { flexDirection: "row", gap: 8, marginBottom: 10 },
+  updateDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.gold, marginTop: 6 },
+  updateTitle: { color: colors.text, fontSize: 12, fontWeight: "600", lineHeight: 16 },
+  updateDate: { color: colors.muted, fontSize: 10, marginTop: 2 },
+  verseText: {
+    color: colors.maroon,
+    fontSize: 13,
+    fontStyle: "italic",
+    fontWeight: "600",
+    lineHeight: 18,
+  },
+  verseMeaning: { color: colors.muted, fontSize: 11, lineHeight: 16, marginTop: 8 },
+  verseSource: { color: colors.gold, fontSize: 11, fontWeight: "700", marginTop: "auto", paddingTop: 8 },
 });

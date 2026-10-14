@@ -1,7 +1,21 @@
 import "./src/themeRuntime";
 import React, { useCallback, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  Montserrat_100Thin,
+  Montserrat_200ExtraLight,
+  Montserrat_300Light,
+  Montserrat_400Regular,
+  Montserrat_400Regular_Italic,
+  Montserrat_500Medium,
+  Montserrat_600SemiBold,
+  Montserrat_600SemiBold_Italic,
+  Montserrat_700Bold,
+  Montserrat_700Bold_Italic,
+  Montserrat_800ExtraBold,
+  Montserrat_900Black,
+} from "@expo-google-fonts/montserrat";
 import { useFonts } from "expo-font";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -43,7 +57,22 @@ function AppContent() {
   );
 }
 export default function App() {
-  const [iconsLoaded, iconsError] = useFonts(Ionicons.font);
+  const [iconsLoaded, iconsError] = useFonts({
+    ...Ionicons.font,
+    ...MaterialCommunityIcons.font,
+    Montserrat_100Thin,
+    Montserrat_200ExtraLight,
+    Montserrat_300Light,
+    Montserrat_400Regular,
+    Montserrat_400Regular_Italic,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_600SemiBold_Italic,
+    Montserrat_700Bold,
+    Montserrat_700Bold_Italic,
+    Montserrat_800ExtraBold,
+    Montserrat_900Black,
+  });
 
   if (!iconsLoaded && !iconsError) {
     return (

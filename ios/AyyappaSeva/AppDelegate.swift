@@ -20,16 +20,25 @@ public class AppDelegate: ExpoAppDelegate {
     reactNativeDelegate = delegate
     reactNativeFactory = factory
     bindReactNativeFactory(factory)
+    launchOptionsForScene = launchOptions
 
-#if os(iOS) || os(tvOS)
-    window = UIWindow(frame: UIScreen.main.bounds)
-    factory.startReactNative(
-      withModuleName: "main",
-      in: window,
-      launchOptions: launchOptions)
-#endif
-
+    // The window is created by SceneDelegate. iOS 27 requires the UIScene
+    // lifecycle for apps built with the iOS 27 SDK; without it the app
+    // terminates at launch.
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  var launchOptionsForScene: [UIApplication.LaunchOptionsKey: Any]?
+
+  public func application(
+    _ application: UIApplication,
+    configurationForConnecting connectingSceneSession: UISceneSession,
+    options: UIScene.ConnectionOptions
+  ) -> UISceneConfiguration {
+    let configuration = UISceneConfiguration(
+      name: "Default", sessionRole: connectingSceneSession.role)
+    configuration.delegateClass = SceneDelegate.self
+    return configuration
   }
 
   // Linking API
@@ -49,6 +58,53 @@ public class AppDelegate: ExpoAppDelegate {
   ) -> Bool {
     let result = RCTLinkingManager.application(application, continue: userActivity, restorationHandler: restorationHandler)
     return super.application(application, continue: userActivity, restorationHandler: restorationHandler) || result
+  }
+}
+
+@objc(SceneDelegate)
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+  var window: UIWindow?
+
+  func scene(
+    _ scene: UIScene,
+    willConnectTo session: UISceneSession,
+    options connectionOptions: UIScene.ConnectionOptions
+  ) {
+    guard
+      let windowScene = scene as? UIWindowScene,
+      let appDelegate = UIApplication.shared.delegate as? AppDelegate,
+      let factory = appDelegate.reactNativeFactory
+    else { return }
+
+    let window = UIWindow(windowScene: windowScene)
+    self.window = window
+    // Libraries that look up the app delegate's window still find it.
+    appDelegate.window = window
+    factory.startReactNative(
+      withModuleName: "main",
+      in: window,
+      launchOptions: appDelegate.launchOptionsForScene)
+    window.makeKeyAndVisible()
+
+    if let url = connectionOptions.urlContexts.first?.url {
+      _ = RCTLinkingManager.application(UIApplication.shared, open: url, options: [:])
+    }
+    if let activity = connectionOptions.userActivities.first {
+      _ = RCTLinkingManager.application(
+        UIApplication.shared, continue: activity, restorationHandler: { _ in })
+    }
+  }
+
+  // Linking API (scene-based replacement for application(_:open:options:))
+  func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+    guard let url = URLContexts.first?.url else { return }
+    _ = RCTLinkingManager.application(UIApplication.shared, open: url, options: [:])
+  }
+
+  // Universal Links
+  func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+    _ = RCTLinkingManager.application(
+      UIApplication.shared, continue: userActivity, restorationHandler: { _ in })
   }
 }
 

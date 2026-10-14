@@ -33,6 +33,12 @@ const light = {
   red: "#B8322A",
   redSoft: "#FBE4E1",
   line: "rgba(120,90,40,0.16)",
+  /** Deep temple maroon (header, headings, banners). */
+  maroon: "#6E1A1A",
+  /** Darker maroon for header backgrounds. */
+  maroonDeep: "#4A0E0E",
+  /** Soft maroon/peach tint for icon circles. */
+  maroonSoft: "#FBEBDD",
 };
 
 // Dark temple theme: near-black pages, warm charcoal cards, bright gold accents.
@@ -53,6 +59,9 @@ const dark: typeof light = {
   red: "#EE8C7E",
   redSoft: "#3A1D18",
   line: "rgba(233,185,73,0.18)",
+  maroon: "#F0A08A",
+  maroonDeep: "#2A0A0A",
+  maroonSoft: "#2E1714",
 };
 
 /** Light-only literal colours used directly in screens, with dark equivalents. */

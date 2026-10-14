@@ -21,7 +21,7 @@ vm.runInNewContext(outputText, {
 
 test("Home, welcome and wallpaper use distinct temple images", () => {
   assert.equal(content.homeTempleImage, "../../assets/temple/ayyappa4.jpg");
-  assert.equal(content.welcomeTempleImage, "../../assets/temple/atlanta-ayyappa-welcome-floral.jpg");
+  assert.equal(content.welcomeTempleImage, "../../assets/temple/ayyappa-home-new.jpeg");
   assert.notEqual(content.welcomeTempleImage, content.homeTempleImage);
   assert.notEqual(content.welcomeTempleImage, content.wallpapers[0].source);
   assert.equal(content.wallpapers[0].id, "ayyappa");

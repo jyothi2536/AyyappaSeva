@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Ayyappa Seva",
+    "name": "Atlanta Ayyappa Temple",
     "slug": "ayyappa-seva",
-    "version": "1.0.1",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -18,8 +18,8 @@
       [
         "expo-media-library",
         {
-          "photosPermission": "Allow Ayyappa Seva to access your photos for devotional wallpapers.",
-          "savePhotosPermission": "Allow Ayyappa Seva to save devotional wallpapers to your photos.",
+          "photosPermission": "Allow Atlanta Ayyappa Temple to access your photos for devotional wallpapers.",
+          "savePhotosPermission": "Allow Atlanta Ayyappa Temple to save devotional wallpapers to your photos.",
           "granularPermissions": []
         }
       ],
@@ -36,11 +36,11 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.varktraditions.ayyappaseva.mobile",
-      "version": "1.0.2",
-      "buildNumber": "7"
+      "version": "1.0.4",
+      "buildNumber": "9"
     },
     "android": {
-      "versionCode": 4,
+      "versionCode": 6,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0B0B08"
