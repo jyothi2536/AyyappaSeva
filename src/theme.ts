@@ -71,6 +71,15 @@ const extraDark: Record<string, string> = {
   "#FCE4E6": "#33191C", // pink tile
   "#F4FAF5": "#141D16", // green gradient end
   "#3E5A46": "#A9CBB2", // green info text
+  "#E4ECFB": "#18202E", // blue tile
+  "#E8F0FC": "#18202E", // blue info note
+  "#F0E6FA": "#241A2E", // violet tile
+  "#2F6FD1": "#8FB4F0", // blue accent
+  "#F1E4CC": "#3A3020", // YouTube row border
+  "#EEE": "#211F16", // thumbnail placeholder
+  "#FFF5F4": "#3A1D18", // YouTube button tint
+  "#B3261E": "#EE8C7E", // YouTube button text
+  "#6F6A59": "#A8A38F", // admin hint text
 };
 
 const lightToDark: Record<string, string> = { ...extraDark };
@@ -83,6 +92,11 @@ export const colors = { ...light };
 let mode: ThemeMode = "light";
 
 export function currentThemeMode() {
+  return mode;
+}
+
+/** Date picker theme that matches the app (keeps calendars readable in dark mode). */
+export function pickerTheme(): ThemeMode {
   return mode;
 }
 

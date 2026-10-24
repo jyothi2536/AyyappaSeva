@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Icon } from "./UI";
-import { colors } from "../theme";
+import { colors, pickerTheme } from "../theme";
 import { DEEKSHA_DAYS, deekshaLength, parseDay, toDay } from "../services/deeksha";
 
 const fmt = (d: Date) =>
@@ -98,7 +98,7 @@ export default function StartDeekshaSheet({
                 value={start}
                 mode="date"
                 display={Platform.OS === "ios" ? "inline" : "calendar"}
-                themeVariant="light"
+                themeVariant={pickerTheme()}
                 accentColor={colors.maroon}
                 onChange={(_, d) => {
                   if (Platform.OS === "android") setPicker(null);
@@ -119,7 +119,7 @@ export default function StartDeekshaSheet({
                 mode="date"
                 minimumDate={start}
                 display={Platform.OS === "ios" ? "inline" : "calendar"}
-                themeVariant="light"
+                themeVariant={pickerTheme()}
                 accentColor={colors.maroon}
                 onChange={(_, d) => {
                   if (Platform.OS === "android") setPicker(null);
@@ -195,7 +195,7 @@ const s = StyleSheet.create({
   input: { padding: 0 },
   length: { color: colors.gold, fontSize: 13, fontWeight: "800", textAlign: "center" },
   startBtn: {
-    backgroundColor: colors.maroon,
+    backgroundColor: "#7A1426",
     borderRadius: 14,
     paddingVertical: 15,
     alignItems: "center",

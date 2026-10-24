@@ -15,7 +15,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Icon, Page } from "../components/UI";
 import { RegistrationTrail } from "../components/RegistrationTrail";
 import type { RootStackParamList } from "../types";
-import { colors } from "../theme";
+import { colors, pickerTheme } from "../theme";
 import { saveMaladharanaRegistration, toDay } from "../services/deeksha";
 
 // UI only — nothing is saved or sent yet.
@@ -229,6 +229,7 @@ export function RegistrationForm({ kind }: { kind: RegistrationKind }) {
                   mode="date"
                   display={Platform.OS === "ios" ? "inline" : "calendar"}
                   minimumDate={new Date(new Date().setHours(0, 0, 0, 0))}
+                  themeVariant={pickerTheme()}
                   accentColor={colors.maroon}
                   onChange={(event, selected) => {
                     if (Platform.OS === "android") setPicker(null);

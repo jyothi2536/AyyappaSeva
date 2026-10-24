@@ -214,7 +214,7 @@ export default function AdminScreen({
                   ? "shield-checkmark"
                   : "checkmark-circle"
               }
-              color="#91BE91"
+              color={colors.success}
             />
             <View style={{ flex: 1 }}>
               <Text style={s.readyText}>
@@ -235,7 +235,7 @@ export default function AdminScreen({
               onPress={confirmLogout}
               style={({ pressed }) => [s.logout, pressed && { opacity: 0.62 }]}
             >
-              <Icon name="log-out-outline" size={18} color="#E9A397" />
+              <Icon name="log-out-outline" size={18} color={colors.red} />
               <Text style={s.logoutText}>Logout</Text>
             </Pressable>
           </View>
@@ -489,7 +489,9 @@ const s = StyleSheet.create({
   multiline: { height: 130, paddingTop: 14, textAlignVertical: "top" },
   hint: { color: "#6F6A59", fontSize: 10, textAlign: "center", marginTop: 15 },
   ready: {
-    backgroundColor: "rgba(72,99,70,.2)",
+    backgroundColor: colors.greenSoft,
+    borderWidth: 1,
+    borderColor: colors.line,
     padding: 13,
     borderRadius: 14,
     flexDirection: "row",
@@ -497,20 +499,20 @@ const s = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  readyText: { color: colors.muted, fontSize: 12, fontWeight: "700" },
-  signedInAs: { color: colors.muted, fontSize: 9, marginTop: 3 },
+  readyText: { color: colors.success, fontSize: 14, fontWeight: "800" },
+  signedInAs: { color: colors.muted, fontSize: 12, marginTop: 3 },
   logout: {
     minHeight: 42,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     borderRadius: 12,
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "rgba(229,138,123,.1)",
+    backgroundColor: colors.redSoft,
     borderWidth: 1,
-    borderColor: "rgba(229,138,123,.25)",
+    borderColor: colors.red,
   },
-  logoutText: { color: "#E9A397", fontSize: 10, fontWeight: "800" },
+  logoutText: { color: colors.red, fontSize: 12, fontWeight: "800" },
   section: {
     color: colors.text,
     fontSize: 18,

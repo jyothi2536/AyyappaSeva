@@ -61,6 +61,7 @@ const menuItems: MenuItem[] = [
   { label: "Resources", icon: "book-outline", target: { tab: "Songs" } },
   { label: "Profile", icon: "person-outline", target: { tab: "Profile" } },
   { label: "Start Deeksha", icon: "notifications-outline", target: { route: "StartDeeksha" } },
+  { label: "Admin", icon: "shield-checkmark-outline", target: { route: "Admin" } },
 ];
 
 export function AppHeader({

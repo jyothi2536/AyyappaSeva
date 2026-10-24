@@ -12,7 +12,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { TEMPLE } from "../data/content";
 import { useApp } from "../state/AppContext";
 import type { CalendarEvent, Language, LocalizedText } from "../types";
-import { colors } from "../theme";
+import { colors, pickerTheme } from "../theme";
 import { GoldButton, Icon } from "./UI";
 
 function blankLocalized(): LocalizedText {
@@ -213,7 +213,7 @@ export function AdminEventForm({
             mode="date"
             display={Platform.OS === "ios" ? "inline" : "calendar"}
             minimumDate={new Date(new Date().setHours(0, 0, 0, 0))}
-            themeVariant="dark"
+            themeVariant={pickerTheme()}
             accentColor={colors.gold}
             onChange={(event, selectedDate) => {
               if (Platform.OS === "android") setShowDatePicker(false);
@@ -294,7 +294,7 @@ export function AdminEventForm({
         </View>
         <Icon
           name={remindersEnabled ? "checkmark-circle" : "ellipse-outline"}
-          color={remindersEnabled ? "#8FBE8D" : colors.muted}
+          color={remindersEnabled ? colors.success : colors.muted}
         />
       </Pressable>
       <GoldButton
@@ -335,7 +335,7 @@ function Field({
         onChangeText={onChange}
         multiline={multiline}
         keyboardType={keyboard}
-        placeholderTextColor="#706B5B"
+        placeholderTextColor={colors.muted}
         style={[s.input, multiline && s.multiline]}
       />
     </>
@@ -350,7 +350,7 @@ const s = StyleSheet.create({
     marginTop: 8,
     marginBottom: 12,
   },
-  sectionTitle: { color: colors.cream, fontSize: 16, fontWeight: "900" },
+  sectionTitle: { color: colors.text, fontSize: 16, fontWeight: "900" },
   help: { color: colors.muted, fontSize: 10, lineHeight: 15, marginTop: 3 },
   languageRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
   languageChip: {
@@ -364,10 +364,10 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   languageActive: { backgroundColor: colors.gold },
-  languageText: { color: colors.cream, fontSize: 11, fontWeight: "800" },
+  languageText: { color: colors.text, fontSize: 11, fontWeight: "800" },
   languageTextActive: { color: colors.ink },
   label: {
-    color: "#C4BFAF",
+    color: colors.muted,
     fontSize: 11,
     fontWeight: "700",
     marginTop: 14,
@@ -379,7 +379,7 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
     backgroundColor: colors.surface,
-    color: colors.cream,
+    color: colors.text,
     paddingHorizontal: 14,
     fontSize: 14,
   },
@@ -403,14 +403,14 @@ const s = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "rgba(233,185,73,.1)",
   },
-  dateValue: { color: colors.cream, fontSize: 13, fontWeight: "800" },
+  dateValue: { color: colors.text, fontSize: 13, fontWeight: "800" },
   dateIso: { color: colors.muted, fontSize: 9, marginTop: 3 },
   calendarCard: {
     marginTop: 8,
     borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.line,
-    backgroundColor: "#17140E",
+    backgroundColor: colors.surface,
     padding: 8,
     overflow: "hidden",
   },
@@ -432,10 +432,10 @@ const s = StyleSheet.create({
     borderRadius: 17,
     borderWidth: 1,
     borderColor: colors.line,
-    backgroundColor: "#201B11",
+    backgroundColor: colors.surface,
     padding: 14,
     marginTop: 18,
     marginBottom: 14,
   },
-  reminderTitle: { color: colors.cream, fontSize: 13, fontWeight: "800" },
+  reminderTitle: { color: colors.text, fontSize: 13, fontWeight: "800" },
 });

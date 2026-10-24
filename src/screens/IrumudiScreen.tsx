@@ -383,7 +383,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 9,
     borderRadius: 10,
-    backgroundColor: colors.maroon,
+    backgroundColor: "#7A1426",
   },
   registerButtonText: { color: colors.cream, fontSize: 13, fontWeight: "700" },
   section: {

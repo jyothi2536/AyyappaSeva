@@ -141,7 +141,7 @@ const s = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: colors.maroon,
+    backgroundColor: "#7A1426",
     alignItems: "center",
     justifyContent: "center",
   },

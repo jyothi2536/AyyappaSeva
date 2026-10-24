@@ -209,7 +209,7 @@ const s = StyleSheet.create({
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: colors.maroon,
+    backgroundColor: "#7A1426",
     borderWidth: 3,
     borderColor: colors.goldFill,
     alignItems: "center",
