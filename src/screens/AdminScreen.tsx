@@ -20,6 +20,8 @@ import { formatEventDate, localize } from "../data/events";
 import { signOutToHome } from "../navigation/adminLogout";
 import type { CalendarEvent, RootStackParamList } from "../types";
 import { colors } from "../theme";
+import { WALLPAPERS_ENABLED } from "../features";
+import AdminLivePanel from "../components/AdminLivePanel";
 
 export default function AdminScreen({
   navigation,
@@ -40,6 +42,7 @@ export default function AdminScreen({
     publishUpdate,
     uploadSong,
     deleteCalendarEvent,
+    wallpapers,
   } = useApp();
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("");
@@ -278,6 +281,8 @@ export default function AdminScreen({
               ) : null}
             </>
           ) : null}
+          <Text style={s.section}>Live stream</Text>
+          <AdminLivePanel />
           <Text style={s.section}>Daily details</Text>
           <AdminAction
             icon="sunny"
@@ -285,6 +290,14 @@ export default function AdminScreen({
             subtitle="Hours, deity of the day & pooja schedule"
             onPress={() => navigation.navigate("AdminToday")}
           />
+          {WALLPAPERS_ENABLED ? (
+            <AdminAction
+              icon="images"
+              title="Wallpapers"
+              subtitle={`Upload or delete photos · ${wallpapers.length} live`}
+              onPress={() => navigation.navigate("AdminWallpapers")}
+            />
+          ) : null}
           <Text style={s.section}>{eventT.manageSchedule}</Text>
           <AdminAction
             icon="business"

@@ -29,6 +29,13 @@ import {
   type DocumentData,
   type Unsubscribe,
 } from "firebase/firestore";
+import {
+  deleteObject,
+  getDownloadURL,
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+} from "firebase/storage";
 import type {
   AdminAccount,
   AdminRole,
@@ -37,6 +44,7 @@ import type {
   CalendarEventInput,
   TodaySchedule,
   Update,
+  Wallpaper,
 } from "../types";
 
 const firebaseConfig = {
@@ -217,6 +225,38 @@ export function subscribeToUpdates(
   );
 }
 
+// ---- Live stream switch (admin turns it on/off, all apps listen) -------------
+
+export type LiveState = {
+  active: boolean;
+  videoId: string | null;
+  title: string;
+};
+
+export function subscribeToLive(receive: (live: LiveState | null) => void): Unsubscribe {
+  if (!db) return () => undefined;
+  return onSnapshot(
+    doc(db, "live", "current"),
+    (snapshot) => {
+      const data = snapshot.data();
+      if (!snapshot.exists() || !data?.active) return receive(null);
+      receive({
+        active: true,
+        videoId: typeof data.videoId === "string" && data.videoId ? data.videoId : null,
+        title: typeof data.title === "string" ? data.title : "",
+      });
+    },
+    () => receive(null),
+  );
+}
+
+export async function setLive(live: LiveState) {
+  await setDoc(doc(requireDb(), "live", "current"), {
+    ...live,
+    updatedAt: serverTimestamp(),
+  });
+}
+
 export async function addTempleUpdate(title: string, body: string) {
   await addDoc(collection(requireDb(), "updates"), {
     title,
@@ -225,6 +265,77 @@ export async function addTempleUpdate(title: string, body: string) {
     pinned: true,
     createdAt: serverTimestamp(),
   });
+}
+
+// ---- Wallpapers (images in Storage, list in Firestore) ----------------------
+
+export function subscribeToWallpapers(
+  receive: (wallpapers: Wallpaper[]) => void,
+  fail: (error: Error) => void,
+): Unsubscribe {
+  if (!db) return () => undefined;
+  return onSnapshot(
+    collection(db, "wallpapers"),
+    (snapshot) => {
+      receive(
+        snapshot.docs
+          .map((item) => {
+            const value = item.data();
+            return {
+              ...value,
+              id: item.id,
+              createdAt: timestampToIso(value.createdAt),
+            } as Wallpaper;
+          })
+          .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+      );
+    },
+    fail,
+  );
+}
+
+async function uploadJpeg(path: string, localUri: string) {
+  if (!app) throw new Error("Firebase is not configured.");
+  const blob = await (await fetch(localUri)).blob();
+  const reference = storageRef(getStorage(app), path);
+  await uploadBytes(reference, blob, { contentType: "image/jpeg" });
+  return getDownloadURL(reference);
+}
+
+export type WallpaperUpload = {
+  uri: string;
+  thumbUri: string;
+  width: number;
+  height: number;
+};
+
+export async function addWallpaper(image: WallpaperUpload) {
+  const database = requireDb();
+  const reference = doc(collection(database, "wallpapers"));
+  const path = `wallpapers/${reference.id}.jpg`;
+  const thumbPath = `wallpapers/${reference.id}_thumb.jpg`;
+  const url = await uploadJpeg(path, image.uri);
+  const thumbUrl = await uploadJpeg(thumbPath, image.thumbUri);
+  await setDoc(reference, {
+    url,
+    thumbUrl,
+    path,
+    thumbPath,
+    width: image.width,
+    height: image.height,
+    createdAt: serverTimestamp(),
+  });
+}
+
+export async function removeWallpaper(wallpaper: Wallpaper) {
+  if (!app) throw new Error("Firebase is not configured.");
+  const storage = getStorage(app);
+  await deleteDoc(doc(requireDb(), "wallpapers", wallpaper.id));
+  await Promise.all(
+    [wallpaper.path, wallpaper.thumbPath].map((path) =>
+      deleteObject(storageRef(storage, path)).catch(() => undefined),
+    ),
+  );
 }
 
 function usernameToFirebaseEmail(username: string) {

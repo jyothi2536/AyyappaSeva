@@ -71,6 +71,8 @@
 	</dict>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Allow $(PRODUCT_NAME) to access your microphone</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Ayyappa Seva uses your approximate location to calculate today's sunrise and sunset times for your Deeksha puja reminders.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Allow Atlanta Ayyappa Temple to save devotional wallpapers to your photos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

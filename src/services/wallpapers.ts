@@ -1,8 +1,9 @@
 import { Platform } from "react-native";
-import { Asset } from "expo-asset";
+import * as FileSystem from "expo-file-system/legacy";
 import * as MediaLibrary from "expo-media-library";
 
-export async function saveWallpaperAsset(source: number): Promise<void> {
+/** Downloads a wallpaper from its URL and saves it to the phone's photos. */
+export async function saveWallpaperAsset(url: string): Promise<void> {
   if (Platform.OS === "android") {
     // expo-media-library requires legacy write access through Android 12L.
     // Android 13+ can save our own bundled image without reading the gallery.
@@ -19,8 +20,14 @@ export async function saveWallpaperAsset(source: number): Promise<void> {
       throw new Error("Photo permission is required.");
     }
   }
-  const asset = Asset.fromModule(source);
-  await asset.downloadAsync();
-  if (!asset.localUri) throw new Error("Unable to prepare wallpaper.");
-  await MediaLibrary.saveToLibraryAsync(asset.localUri);
+  const target = `${FileSystem.cacheDirectory}wallpaper-${Date.now()}.jpg`;
+  const download = await FileSystem.downloadAsync(url, target);
+  if (download.status !== 200 || !download.uri) {
+    throw new Error("Unable to download wallpaper. Check your connection.");
+  }
+  try {
+    await MediaLibrary.saveToLibraryAsync(download.uri);
+  } finally {
+    await FileSystem.deleteAsync(download.uri, { idempotent: true }).catch(() => undefined);
+  }
 }

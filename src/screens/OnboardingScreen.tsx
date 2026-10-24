@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   AccessibilityInfo,
   Animated,
-  ImageBackground,
+  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -62,23 +62,27 @@ export default function OnboardingScreen({
   }, [left, right, petals, width, reduceMotion, returning]);
   return (
     <View style={s.root}>
-      <ImageBackground
-        source={welcomeTempleImage}
-        style={StyleSheet.absoluteFill}
-        imageStyle={{ resizeMode: "cover" }}
-      >
+      <View style={[StyleSheet.absoluteFill, s.stage]}>
+        <Image
+          source={welcomeTempleImage}
+          accessible
+          accessibilityRole="header"
+          accessibilityLabel={TEMPLE.name}
+          accessibilityIgnoresInvertColors
+          resizeMode="contain"
+          style={{
+            width: Math.min(width - 32, height * 0.5),
+            height: Math.min(width - 32, height * 0.5),
+            marginTop: height * 0.1,
+          }}
+        />
         <LinearGradient
-          colors={["rgba(0,0,0,.08)", "transparent", "rgba(0,0,0,.88)"]}
+          colors={["transparent", "transparent", "rgba(0,0,0,.6)"]}
           style={StyleSheet.absoluteFill}
         />
         {petalsVisible && <PetalShower progress={petals} width={width} height={height} />}
         <View style={s.reveal}>
-          <Text
-            accessibilityRole="header"
-            style={[s.templeTitle, s.revealTitle]}
-          >
-            {TEMPLE.name}
-          </Text>
+          {/* The temple name is part of the welcome artwork, so it isn't repeated here. */}
           <Text style={s.mantra}>Swamiye Saranam Ayyappa</Text>
           <Text style={s.subtitle}>
             Welcome to your sacred temple community
@@ -94,7 +98,7 @@ export default function OnboardingScreen({
             <Icon name="arrow-forward" color={colors.ink} />
           </Pressable>
         </View>
-      </ImageBackground>
+      </View>
       <Animated.View
         pointerEvents="none"
         style={[s.door, s.left, { transform: [{ translateX: left }] }]}
@@ -170,6 +174,8 @@ const s = StyleSheet.create({
     bottom: 48,
     alignItems: "center",
   },
+  // Deep maroon behind the circular artwork so its corners blend in.
+  stage: { backgroundColor: colors.maroonDeep, alignItems: "center" },
   mantra: {
     color: "#FFF6DE",
     fontSize: 27,
@@ -197,12 +203,6 @@ const s = StyleSheet.create({
     gap: 10,
   },
   languagePage: { flex: 1, padding: 24, paddingTop: 70 },
-  templeTitle: {
-    color: colors.gold,
-    fontSize: 22,
-    fontWeight: "800",
-  },
-  revealTitle: { textAlign: "center", marginBottom: 12 },
   title: {
     color: colors.cream,
     fontSize: 34,

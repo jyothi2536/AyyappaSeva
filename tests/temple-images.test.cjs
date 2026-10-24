@@ -19,26 +19,21 @@ vm.runInNewContext(outputText, {
   },
 }, { filename });
 
-test("Home, welcome and wallpaper use distinct temple images", () => {
+test("Home and welcome use distinct temple images", () => {
   assert.equal(content.homeTempleImage, "../../assets/temple/ayyappa4.jpg");
-  assert.equal(content.welcomeTempleImage, "../../assets/temple/ayyappa-home-new.jpeg");
+  assert.equal(content.welcomeTempleImage, "../../assets/temple/welcome-mandalam.webp");
   assert.notEqual(content.welcomeTempleImage, content.homeTempleImage);
-  assert.notEqual(content.welcomeTempleImage, content.wallpapers[0].source);
-  assert.equal(content.wallpapers[0].id, "ayyappa");
-  assert.equal(content.wallpapers[0].source, "../../assets/temple/ayyappa7.jpg");
-  assert.equal(content.wallpapers[0].subtitle, "Atlanta Ayyappa Temple");
+});
+
+test("wallpapers come from Firebase, not bundled deity images", () => {
+  assert.equal(content.wallpapers, undefined);
+  for (const id of ["ganesha", "murugan", "shiva", "durga", "venkateswara", "hanuman"]) {
+    assert.equal(existsSync(path.join(__dirname, `../assets/wallpapers/${id}.png`)), false);
+  }
 });
 
 test("the door reveal uses its dedicated floral photo rather than the wallpaper", () => {
   const welcome = readFileSync(path.join(__dirname, "../src/screens/OnboardingScreen.tsx"), "utf8");
   assert.match(welcome, /source=\{welcomeTempleImage\}/);
   assert.doesNotMatch(welcome, /source=\{wallpapers\[0\]\.source\}/);
-});
-
-test("the other six deity wallpapers stay unchanged", () => {
-  const ids = ["ganesha", "murugan", "shiva", "durga", "venkateswara", "hanuman"];
-  assert.deepEqual(Array.from(content.wallpapers.slice(1), (item) => item.id), ids);
-  for (const wallpaper of content.wallpapers.slice(1)) {
-    assert.equal(wallpaper.source, `../../assets/wallpapers/${wallpaper.id}.png`);
-  }
 });

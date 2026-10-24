@@ -35,6 +35,7 @@ import {
   subscribeToAdminAccounts,
   subscribeToCalendarEvents,
   subscribeToUpdates,
+  subscribeToWallpapers,
   updateCalendarEvent,
 } from "../services/firebase";
 import type {
@@ -45,6 +46,7 @@ import type {
   Language,
   Song,
   Update,
+  Wallpaper,
 } from "../types";
 
 type AppState = {
@@ -59,6 +61,8 @@ type AppState = {
   t: Copy;
   songs: Song[];
   updates: Update[];
+  /** Phone wallpapers managed by admins in Firebase. */
+  wallpapers: Wallpaper[];
   events: CalendarEvent[];
   eventT: (typeof eventTranslations)[Language];
   isAdmin: boolean;
@@ -94,6 +98,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [themeMode, setThemeModeState] = useState<ThemeMode>(currentThemeMode());
   const [songs, setSongs] = useState<Song[]>(initialSongs);
   const [updates, setUpdates] = useState<Update[]>(initialUpdates);
+  const [wallpapers, setWallpapers] = useState<Wallpaper[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>(initialCalendarEvents);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminSession, setAdminSession] = useState<AdminSession | null>(null);
@@ -107,6 +112,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           "language",
           "songs",
           "updates",
+          "wallpapers",
           "calendarEvents",
           "admin",
           "onboardingComplete",
@@ -124,6 +130,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           setLyricsLanguageState(savedLyrics as Language);
         if (values.songs) setSongs(JSON.parse(values.songs));
         if (values.updates) setUpdates(JSON.parse(values.updates));
+        if (values.wallpapers) setWallpapers(JSON.parse(values.wallpapers));
         if (values.calendarEvents)
           setEvents(JSON.parse(values.calendarEvents));
         setOnboardingComplete(values.onboardingComplete === "true");
@@ -150,6 +157,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setCloudConnected(true);
       void AsyncStorage.setItem("updates", JSON.stringify(sharedUpdates));
     }, fail);
+    const stopWallpapers = subscribeToWallpapers((shared) => {
+      setWallpapers(shared);
+      void AsyncStorage.setItem("wallpapers", JSON.stringify(shared));
+    }, fail);
     const stopAdmin = subscribeToAdmin((session) => {
       setAdminSession(session);
       setIsAdmin(Boolean(session));
@@ -157,6 +168,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return () => {
       stopEvents();
       stopUpdates();
+      stopWallpapers();
       stopAdmin();
     };
   }, []);
@@ -319,6 +331,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       t: translations[language],
       songs,
       updates,
+      wallpapers,
       events,
       eventT: eventTranslations[language],
       isAdmin,
@@ -345,6 +358,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       lyricsLanguage,
       songs,
       updates,
+      wallpapers,
       events,
       isAdmin,
       adminSession,

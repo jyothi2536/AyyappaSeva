@@ -68,10 +68,13 @@ export type Update = {
 };
 export type Wallpaper = {
   id: string;
-  name: string;
-  subtitle: string;
-  source: number;
-  accent: string;
+  url: string;
+  thumbUrl: string;
+  path: string;
+  thumbPath: string;
+  width: number;
+  height: number;
+  createdAt: string;
 };
 export type BuiltInDocument = Song & { assetSource: number; category: string };
 
@@ -106,7 +109,6 @@ export type TabParamList = {
 
 export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<TabParamList> | undefined;
-  Downloads: undefined;
   Wallpapers: undefined;
   Scriptures: undefined;
   Harivarasanam: undefined;
@@ -117,12 +119,31 @@ export type RootStackParamList = {
   AdminPadiPuja: { eventId?: string } | undefined;
   AdminCalendar: undefined;
   AdminToday: undefined;
+  AdminWallpapers: undefined;
   DevoteeLogin: { next?: "BookPooja" } | undefined;
   DevoteeSignUp: { next?: "BookPooja" } | undefined;
   BookPooja: undefined;
   ContactTemple: undefined;
   Irumudi: undefined;
   IrumudiRegistration: undefined;
+  HomePadiPuja: undefined;
+  Maladharana: undefined;
+  MaladharanaReview: {
+    kind: "maladharana" | "irumudi";
+    contact: {
+      name: string;
+      phone: string;
+      email: string;
+      address: string;
+      city: string;
+      state: string;
+      zip: string;
+    };
+    devotees: { name: string; type: string; date: string }[];
+    needItems: boolean;
+    qty: Record<string, number>;
+    total: number;
+  };
 };
 
 /** A highlighted festival/event shown in the Home "Upcoming Major Event" section. */

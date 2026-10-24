@@ -5,21 +5,26 @@ const { test } = require("node:test");
 const vm = require("node:vm");
 const ts = require("typescript");
 
+const URL = "https://example.com/w.jpg";
 const filename = path.join(__dirname, "../src/services/wallpapers.ts");
 const { outputText } = ts.transpileModule(readFileSync(filename, "utf8"), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
   fileName: filename,
 });
 
-function setup(os, version, { granted = true, uri = "file:///wallpaper.jpg", fails = false } = {}) {
+function setup(os, version, { granted = true, status = 200, fails = false } = {}) {
   const calls = [];
   const exports = {};
   const dependencies = {
     "react-native": { Platform: { OS: os, Version: version } },
-    "expo-asset": { Asset: { fromModule: (source) => {
-      calls.push(["asset", source]);
-      return { localUri: uri, downloadAsync: async () => calls.push(["download"]) };
-    } } },
+    "expo-file-system/legacy": {
+      cacheDirectory: "file:///cache/",
+      downloadAsync: async (url) => {
+        calls.push(["download", url]);
+        return { status, uri: "file:///wallpaper.jpg" };
+      },
+      deleteAsync: async (value) => calls.push(["delete", value]),
+    },
     "expo-media-library": {
       requestPermissionsAsync: async (...args) => {
         calls.push(["permission", ...args]);
@@ -44,36 +49,36 @@ function setup(os, version, { granted = true, uri = "file:///wallpaper.jpg", fai
 for (const version of [33, 34, 36]) {
   test(`Android ${version}: saves wallpaper without gallery or microphone permission`, async () => {
     const app = setup("android", version);
-    await app.save(42);
-    assert.deepEqual(app.calls, [["asset", 42], ["download"], ["save", "file:///wallpaper.jpg"]]);
+    await app.save(URL);
+    assert.deepEqual(app.calls, [["download", URL], ["save", "file:///wallpaper.jpg"], ["delete", "file:///wallpaper.jpg"]]);
   });
 }
 for (const version of [24, 29, 32]) {
   test(`Android ${version}: asks only for legacy write access`, async () => {
     const app = setup("android", version);
-    await app.save(42);
+    await app.save(URL);
     assert.deepEqual(app.calls[0], ["permission", true]);
-    assert.equal(app.calls.at(-1)[0], "save");
+    assert.equal(app.calls.at(-2)[0], "save");
   });
 }
 test("iOS keeps its existing permission flow", async () => {
   const app = setup("ios", "26.5");
-  await app.save(42);
+  await app.save(URL);
   assert.deepEqual(app.calls[0], ["permission"]);
 });
 for (const [os, version] of [["android", 32], ["ios", "26.5"]]) {
   test(`${os}: denied permission does not download or save`, async () => {
     const app = setup(os, version, { granted: false });
-    await assert.rejects(app.save(42), /permission is required/);
+    await assert.rejects(app.save(URL), /permission is required/);
     assert.equal(app.calls.length, 1);
   });
 }
-test("missing downloaded file reports an error instead of saving", async () => {
-  const app = setup("android", 36, { uri: null });
-  await assert.rejects(app.save(42), /Unable to prepare wallpaper/);
+test("failed download reports an error instead of saving", async () => {
+  const app = setup("android", 36, { status: 404 });
+  await assert.rejects(app.save(URL), /Unable to download wallpaper/);
   assert.equal(app.calls.some(([action]) => action === "save"), false);
 });
 test("native save failure reaches the screen's error handler", async () => {
   const app = setup("android", 36, { fails: true });
-  await assert.rejects(app.save(42), /Storage is full/);
+  await assert.rejects(app.save(URL), /Storage is full/);
 });

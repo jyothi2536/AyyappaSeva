@@ -133,7 +133,7 @@ const s = StyleSheet.create({
     borderBottomColor: colors.line,
   },
   text: {
-    color: "#F5E3B8",
+    color: colors.text,
     fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
     fontSize: 16,
     lineHeight: 27,

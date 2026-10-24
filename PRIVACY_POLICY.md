@@ -1,6 +1,6 @@
 # Privacy Policy for Ayyappa Seva
 
-**Effective date: August 31, 2026**
+**Effective date: October 21, 2026**
 
 Ayyappa Seva ("the App") is provided by VARK Technologies. This Privacy Policy explains what information the App handles and how it is used.
 
@@ -21,8 +21,13 @@ Administrator account information is used only for app functionality, account au
 
 ## Device Permissions
 
-- **Notifications:** The App may request permission to schedule event reminders. These reminders are scheduled locally on the device.
+- **Notifications:** The App may request permission to schedule event reminders and, during a Mandala Deeksha, daily sunrise and sunset puja reminders and an Irumudi reminder. These reminders are scheduled locally on the device.
+- **Approximate Location:** During a Mandala Deeksha, the App may request permission to use the device's approximate location while the App is in use. It is used only on the device to calculate the local sunrise and sunset times shown in puja reminders. Location is not uploaded, shared, sold, or used for tracking or advertising, and the App never uses background location. If permission is declined, the App uses the temple's location instead.
 - **Photo Library:** The App may request permission to save a devotional wallpaper when the user chooses to download it. The App does not upload the user's photo library.
+
+## Maladharana Registration
+
+When a devotee registers for Maladharana, the name, contact details, and Deeksha dates entered in the form are stored only on the device so the App can show the 41-day Deeksha countdown and schedule reminders. Ending the Deeksha in the App deletes this information from the device.
 
 ## Service Providers
 

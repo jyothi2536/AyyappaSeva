@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Easing, StyleSheet, View } from "react-native";
+import { Alert, Animated, Easing, StyleSheet, View } from "react-native";
 import {
   createNavigationContainerRef,
   DefaultTheme,
@@ -17,14 +17,24 @@ import {
 } from "../components/AppChrome";
 import type { RootStackParamList, TabParamList } from "../types";
 import { colors } from "../theme";
+import * as Notifications from "expo-notifications";
+import {
+  IRUMUDI_ROUTE,
+  clearDeekshaStart,
+  loadDeekshaStart,
+  notifyDeekshaChange,
+  startDeekshaWithDates,
+} from "../services/deeksha";
+import StartDeekshaSheet from "../components/StartDeekshaSheet";
 import HomeScreen from "../screens/HomeScreen";
 import SongsScreen from "../screens/SongsScreen";
 import UpdatesScreen from "../screens/UpdatesScreen";
 import TempleScreen from "../screens/TempleScreen";
 import DeekshaScreen from "../screens/DeekshaScreen";
 import ProfileScreen from "../screens/ProfileScreen";
-import DownloadsScreen from "../screens/DownloadsScreen";
 import WallpapersScreen from "../screens/WallpapersScreen";
+import MaladharanaScreen from "../screens/MaladharanaScreen";
+import MaladharanaReviewScreen from "../screens/MaladharanaReviewScreen";
 import ScripturesScreen from "../screens/ScripturesScreen";
 import HarivarasanamScreen from "../screens/HarivarasanamScreen";
 import LyricsScreen from "../screens/LyricsScreen";
@@ -34,12 +44,14 @@ import AdminTempleEventScreen from "../screens/AdminTempleEventScreen";
 import AdminPadiPujaScreen from "../screens/AdminPadiPujaScreen";
 import AdminCalendarScreen from "../screens/AdminCalendarScreen";
 import AdminTodayScreen from "../screens/AdminTodayScreen";
+import AdminWallpapersScreen from "../screens/AdminWallpapersScreen";
 import DevoteeLoginScreen from "../screens/DevoteeLoginScreen";
 import DevoteeSignUpScreen from "../screens/DevoteeSignUpScreen";
 import BookPoojaScreen from "../screens/BookPoojaScreen";
 import ContactTempleScreen from "../screens/ContactTempleScreen";
 import IrumudiScreen from "../screens/IrumudiScreen";
 import IrumudiRegistrationScreen from "../screens/IrumudiRegistrationScreen";
+import HomePadiPujaScreen from "../screens/HomePadiPujaScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tabs = createBottomTabNavigator<TabParamList>();
@@ -96,8 +108,9 @@ const UpdatesScreenAnimated = withScreenMotion(UpdatesScreen);
 const TempleScreenAnimated = withScreenMotion(TempleScreen);
 const DeekshaScreenAnimated = withScreenMotion(DeekshaScreen);
 const ProfileScreenAnimated = withScreenMotion(ProfileScreen);
-const DownloadsScreenAnimated = withScreenMotion(DownloadsScreen);
 const WallpapersScreenAnimated = withScreenMotion(WallpapersScreen);
+const MaladharanaScreenAnimated = withScreenMotion(MaladharanaScreen);
+const MaladharanaReviewScreenAnimated = withScreenMotion(MaladharanaReviewScreen);
 const ScripturesScreenAnimated = withScreenMotion(ScripturesScreen);
 const HarivarasanamScreenAnimated = withScreenMotion(HarivarasanamScreen);
 const LyricsScreenAnimated = withScreenMotion(LyricsScreen);
@@ -107,12 +120,14 @@ const AdminTempleEventScreenAnimated = withScreenMotion(AdminTempleEventScreen);
 const AdminPadiPujaScreenAnimated = withScreenMotion(AdminPadiPujaScreen);
 const AdminCalendarScreenAnimated = withScreenMotion(AdminCalendarScreen);
 const AdminTodayScreenAnimated = withScreenMotion(AdminTodayScreen);
+const AdminWallpapersScreenAnimated = withScreenMotion(AdminWallpapersScreen);
 const DevoteeLoginScreenAnimated = withScreenMotion(DevoteeLoginScreen);
 const DevoteeSignUpScreenAnimated = withScreenMotion(DevoteeSignUpScreen);
 const BookPoojaScreenAnimated = withScreenMotion(BookPoojaScreen);
 const ContactTempleScreenAnimated = withScreenMotion(ContactTempleScreen);
 const IrumudiScreenAnimated = withScreenMotion(IrumudiScreen);
 const IrumudiRegistrationScreenAnimated = withScreenMotion(IrumudiRegistrationScreen);
+const HomePadiPujaScreenAnimated = withScreenMotion(HomePadiPujaScreen);
 
 function MainTabs() {
   return (
@@ -134,7 +149,11 @@ function MainTabs() {
 }
 export default function AppNavigator() {
   const [activeTab, setActiveTab] = useState<AppTab>("Home");
+  const [canGoBack, setCanGoBack] = useState(false);
+  const [deekshaActive, setDeekshaActive] = useState(false);
+  const [pickingDates, setPickingDates] = useState(false);
   const syncActiveTab = useCallback(() => {
+    setCanGoBack(navigationRef.isReady() && navigationRef.canGoBack());
     const currentRoute = navigationRef.getCurrentRoute()?.name;
     if (currentRoute && tabNames.includes(currentRoute as AppTab)) {
       setActiveTab(currentRoute as AppTab);
@@ -146,10 +165,55 @@ export default function AppNavigator() {
       navigationRef.dispatch(StackActions.popTo("MainTabs", { screen: tab }));
     }
   }, []);
+  // Tapping the Day-40 "Irumudi tomorrow" reminder opens the Irumudi page,
+  // whether the app was running or launched from the notification.
+  const pendingRoute = useRef<string | null>(null);
+  const openNotificationRoute = useCallback((route: unknown) => {
+    if (route === "Deeksha") {
+      if (navigationRef.isReady()) navigateToTab("Deeksha");
+      return;
+    }
+    if (route !== IRUMUDI_ROUTE) return;
+    if (navigationRef.isReady()) navigationRef.navigate("Irumudi");
+    else pendingRoute.current = IRUMUDI_ROUTE;
+  }, [navigateToTab]);
+  useEffect(() => {
+    const handled = new Set<string>();
+    const handle = (r: Notifications.NotificationResponse | null) => {
+      if (!r) return;
+      const id = r.notification.request.identifier;
+      if (handled.has(id)) return;
+      handled.add(id);
+      openNotificationRoute(r.notification.request.content.data?.route);
+    };
+    void Notifications.getLastNotificationResponseAsync().then(handle).catch(() => undefined);
+    const sub = Notifications.addNotificationResponseReceivedListener(handle);
+    return () => sub.remove();
+  }, [openNotificationRoute]);
+  const onNavReady = useCallback(() => {
+    syncActiveTab();
+    if (pendingRoute.current) {
+      pendingRoute.current = null;
+      navigationRef.navigate("Irumudi");
+    }
+  }, [syncActiveTab]);
   const navigateFromMenu = useCallback(
     (target: MenuTarget) => {
       if ("tab" in target) {
         navigateToTab(target.tab);
+      } else if (target.route === "BookPooja") {
+        Alert.alert("Book a Pooja", "Online pooja booking is coming soon.");
+      } else if (target.route === "StartDeeksha") {
+        void (async () => {
+          if (await loadDeekshaStart()) {
+            await clearDeekshaStart();
+            setDeekshaActive(false);
+            notifyDeekshaChange();
+            navigateToTab("Home");
+          } else {
+            setPickingDates(true);
+          }
+        })();
       } else if (navigationRef.isReady()) {
         navigationRef.navigate(target.route);
       }
@@ -161,11 +225,20 @@ export default function AppNavigator() {
       <AppHeader
         onUpdates={() => navigateToTab("Updates")}
         onMenuNavigate={navigateFromMenu}
+        deekshaActive={deekshaActive}
+        onMenuOpen={() => void loadDeekshaStart().then((v) => setDeekshaActive(Boolean(v)))}
+        onBack={
+          canGoBack
+            ? () => {
+                if (navigationRef.isReady() && navigationRef.canGoBack()) navigationRef.goBack();
+              }
+            : undefined
+        }
       />
       <View style={s.content}>
         <NavigationContainer
           ref={navigationRef}
-          onReady={syncActiveTab}
+          onReady={onNavReady}
           onStateChange={syncActiveTab}
           theme={{
             ...DefaultTheme,
@@ -188,7 +261,6 @@ export default function AppNavigator() {
             }}
           >
             <Stack.Screen name="MainTabs" component={MainTabs} />
-            <Stack.Screen name="Downloads" component={DownloadsScreenAnimated} />
             <Stack.Screen name="Wallpapers" component={WallpapersScreenAnimated} />
             <Stack.Screen name="Scriptures" component={ScripturesScreenAnimated} />
             <Stack.Screen
@@ -225,16 +297,35 @@ export default function AppNavigator() {
               component={AdminTodayScreenAnimated}
               options={{ animation: "slide_from_right" }}
             />
+            <Stack.Screen
+              name="AdminWallpapers"
+              component={AdminWallpapersScreenAnimated}
+              options={{ animation: "slide_from_right" }}
+            />
             <Stack.Screen name="DevoteeLogin" component={DevoteeLoginScreenAnimated} options={{ animation: "slide_from_right" }} />
             <Stack.Screen name="DevoteeSignUp" component={DevoteeSignUpScreenAnimated} options={{ animation: "slide_from_right" }} />
             <Stack.Screen name="BookPooja" component={BookPoojaScreenAnimated} options={{ animation: "slide_from_right" }} />
             <Stack.Screen name="ContactTemple" component={ContactTempleScreenAnimated} options={{ animation: "slide_from_right" }} />
             <Stack.Screen name="Irumudi" component={IrumudiScreenAnimated} options={{ animation: "slide_from_right" }} />
             <Stack.Screen name="IrumudiRegistration" component={IrumudiRegistrationScreenAnimated} options={{ animation: "slide_from_right" }} />
+            <Stack.Screen name="HomePadiPuja" component={HomePadiPujaScreenAnimated} options={{ animation: "slide_from_right" }} />
+            <Stack.Screen name="Maladharana" component={MaladharanaScreenAnimated} options={{ animation: "slide_from_right" }} />
+            <Stack.Screen name="MaladharanaReview" component={MaladharanaReviewScreenAnimated} options={{ animation: "slide_from_right" }} />
           </Stack.Navigator>
         </NavigationContainer>
       </View>
       <AppFooter activeTab={activeTab} onNavigate={navigateToTab} />
+      <StartDeekshaSheet
+        visible={pickingDates}
+        onClose={() => setPickingDates(false)}
+        onStart={async (startIso, endIso, name) => {
+          setPickingDates(false);
+          await startDeekshaWithDates(startIso, endIso, name);
+          setDeekshaActive(true);
+          notifyDeekshaChange();
+          navigateToTab("Home");
+        }}
+      />
     </View>
   );
 }

@@ -1,4 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import SegmentedControl from "../components/SegmentedControl";
+import YouTubeVideos from "../components/YouTubeVideos";
+import LiveCard from "../components/LiveCard";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
@@ -9,6 +13,9 @@ import { prepareBuiltInDocument } from "../services/documents";
 import { useApp } from "../state/AppContext";
 import type { BuiltInDocument, RootStackParamList, Song } from "../types";
 import { colors } from "../theme";
+
+type ResourceSection = "songs" | "books";
+const SECTION_KEY = "resourcesSection";
 
 const FEATURED_DOCUMENT_IDS = new Set([
   "mahishasura-mardini-four-languages",
@@ -21,6 +28,17 @@ const FEATURED_DOCUMENT_IDS = new Set([
 export default function SongsScreen() {
   const { t, songs, language } = useApp();
   const [preparingDocument, setPreparingDocument] = useState<string | null>(null);
+  const [section, setSection] = useState<ResourceSection>("songs");
+  const touchX = useRef(0);
+  useEffect(() => {
+    AsyncStorage.getItem(SECTION_KEY).then((v) => {
+      if (v === "songs" || v === "books") setSection(v);
+    });
+  }, []);
+  const selectSection = (next: ResourceSection) => {
+    setSection(next);
+    void AsyncStorage.setItem(SECTION_KEY, next);
+  };
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const open = (song: Song) => {
@@ -34,9 +52,11 @@ export default function SongsScreen() {
     Alert.alert(song.title, "Audio will be added by a temple administrator.");
   };
   const scripture = scriptureFeatureCopy[language];
-  const featuredDocuments = builtInDocuments.filter((document) =>
-    FEATURED_DOCUMENT_IDS.has(document.id),
-  );
+  // Featured stotrams first, then every other bundled book.
+  const featuredDocuments = [
+    ...builtInDocuments.filter((document) => FEATURED_DOCUMENT_IDS.has(document.id)),
+    ...builtInDocuments.filter((document) => !FEATURED_DOCUMENT_IDS.has(document.id)),
+  ];
   const openBuiltInDocument = async (document: BuiltInDocument) => {
     try {
       setPreparingDocument(document.id);
@@ -58,6 +78,25 @@ export default function SongsScreen() {
         title={t.library}
         subtitle={t.librarySub}
       />
+      <LiveCard />
+      <SegmentedControl
+        segments={[
+          { key: "songs", label: "Bhajan Songs", icon: "musical-notes-outline" },
+          { key: "books", label: "Bhajan Books", icon: "book-outline" },
+        ]}
+        value={section}
+        onChange={selectSection}
+      />
+      <View
+        onTouchStart={(e) => (touchX.current = e.nativeEvent.pageX)}
+        onTouchEnd={(e) => {
+          const dx = e.nativeEvent.pageX - touchX.current;
+          if (dx < -70 && section === "songs") selectSection("books");
+          else if (dx > 70 && section === "books") selectSection("songs");
+        }}
+      >
+      {section === "songs" ? (
+      <>
       <Pressable
         style={s.feature}
         onPress={() => navigation.navigate("Scriptures")}
@@ -76,46 +115,9 @@ export default function SongsScreen() {
         </View>
         <Icon name="chevron-forward" color={colors.success} />
       </Pressable>
-      <Pressable
-        style={s.download}
-        onPress={() => navigation.navigate("Downloads")}
-      >
-        <View style={s.downloadIcon}>
-          <Icon name="download-outline" color={colors.ink} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={s.featureTitle}>{t.downloads}</Text>
-          <Text style={s.meta}>
-            {builtInDocuments.length} · {t.availableOffline}
-          </Text>
-        </View>
-        <Icon name="chevron-forward" color={colors.gold} />
-      </Pressable>
-      <Text style={s.label}>DEVOTIONAL COLLECTION</Text>
+      <Text style={s.label}>BHAJAN SONGS</Text>
       <View style={s.list}>
-        {featuredDocuments.map((document) => (
-          <Pressable
-            key={document.id}
-            onPress={() => openBuiltInDocument(document)}
-            style={s.row}
-            disabled={preparingDocument === document.id}
-          >
-            <View style={[s.cover, { backgroundColor: "#FFF1DA" }]}>
-              <Icon name="document-text" color={colors.saffron} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={s.title}>{document.title}</Text>
-              <Text style={s.meta}>
-                {preparingDocument === document.id
-                  ? t.preparing
-                  : document.subtitle}
-              </Text>
-            </View>
-            <Text style={s.type}>PDF</Text>
-            <Icon name="chevron-forward" color={colors.muted} size={18} />
-          </Pressable>
-        ))}
-        {songs.map((song) => (
+        {songs.filter((song) => song.type === "AUDIO").map((song) => (
           <Pressable key={song.id} onPress={() => open(song)} style={s.row}>
             <View
               style={[
@@ -139,6 +141,51 @@ export default function SongsScreen() {
             <Icon name="chevron-forward" color={colors.muted} size={18} />
           </Pressable>
         ))}
+      </View>
+      <YouTubeVideos />
+      </>
+      ) : (
+      <>
+      <Text style={s.label}>BHAJAN BOOKS</Text>
+      <View style={s.list}>
+        {songs.filter((song) => song.type === "TXT").map((song) => (
+          <Pressable key={song.id} onPress={() => open(song)} style={s.row}>
+            <View style={[s.cover, { backgroundColor: "#FFF1DA" }]}>
+              <Icon name="document-text" color={colors.saffron} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.title}>{song.title}</Text>
+              <Text style={s.meta}>{song.subtitle}</Text>
+            </View>
+            <Text style={s.type}>LYRICS</Text>
+            <Icon name="chevron-forward" color={colors.muted} size={18} />
+          </Pressable>
+        ))}
+        {featuredDocuments.map((document) => (
+          <Pressable
+            key={document.id}
+            onPress={() => openBuiltInDocument(document)}
+            style={s.row}
+            disabled={preparingDocument === document.id}
+          >
+            <View style={[s.cover, { backgroundColor: "#FFF1DA" }]}>
+              <Icon name="document-text" color={colors.saffron} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.title}>{document.title}</Text>
+              <Text style={s.meta}>
+                {preparingDocument === document.id
+                  ? t.preparing
+                  : document.subtitle}
+              </Text>
+            </View>
+            <Text style={s.type}>{document.type}</Text>
+            <Icon name="chevron-forward" color={colors.muted} size={18} />
+          </Pressable>
+        ))}
+      </View>
+      </>
+      )}
       </View>
       <View style={s.info}>
         <Icon name="shield-checkmark-outline" color={colors.success} />

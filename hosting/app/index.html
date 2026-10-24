@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Get the Atlanta Ayyappa Temple app</title>
+<script>
+  // One QR code for everyone: send each phone to its own store.
+  var IOS = "https://apps.apple.com/us/app/atlanta-ayyappa-temple/id6807055617";
+  var ANDROID = "https://play.google.com/store/apps/details?id=com.varktraditions.ayyappaseva";
+  var ua = navigator.userAgent || "";
+  var isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  if (isIOS) location.replace(IOS);
+  else if (/Android/i.test(ua)) location.replace(ANDROID);
+</script>
+<style>
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#FBF6EE;color:#1F1A12;
+       display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center}
+  .c{padding:32px 24px;max-width:420px}
+  h1{color:#6E1A1A;font-size:24px;margin:0 0 6px}
+  p{color:#6E6352;margin:0 0 24px}
+  a{display:block;margin:12px 0;padding:14px;border-radius:12px;background:#EBC062;color:#1C1710;
+    font-weight:800;text-decoration:none;letter-spacing:.5px}
+  small{display:block;margin-top:20px;color:#A8761A}
+</style>
+</head>
+<body>
+  <div class="c">
+    <h1>Atlanta Ayyappa Temple</h1>
+    <p>Download the Ayyappa Seva app</p>
+    <a href="https://apps.apple.com/us/app/atlanta-ayyappa-temple/id6807055617">Download on the App Store</a>
+    <a href="https://play.google.com/store/apps/details?id=com.varktraditions.ayyappaseva">Get it on Google Play</a>
+    <small>Swamiye Saranam Ayyappa</small>
+  </div>
+</body>
+</html>

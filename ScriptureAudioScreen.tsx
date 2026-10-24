@@ -155,7 +155,6 @@ export default function ScriptureAudioScreen({ language, onBack, languagePicker 
 
   return <SafeAreaView style={styles.safe}>
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.page}>
-      <Pressable accessibilityRole="button" hitSlop={12} style={({ pressed }) => [styles.back, pressed && { opacity: .7 }]} onPress={onBack}><Ionicons name="chevron-back" size={24} color={palette.gold} /><Text style={styles.backText}>{copy.back}</Text></Pressable>
       <View style={styles.heroIcon}><Ionicons name="headset" size={28} color={palette.gold} /></View>
       <Text style={styles.eyebrow}>{copy.eyebrow}</Text>
       <Text style={styles.title}>{copy.title}</Text>

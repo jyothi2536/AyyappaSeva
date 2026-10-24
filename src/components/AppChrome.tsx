@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { TEMPLE } from "../data/content";
 import { useApp } from "../state/AppContext";
@@ -41,8 +41,8 @@ export type MenuTarget =
         | "ContactTemple"
         | "Wallpapers"
         | "Scriptures"
-        | "Downloads"
         | "Harivarasanam"
+        | "StartDeeksha"
         | "Admin";
     };
 
@@ -52,30 +52,35 @@ type MenuItem = {
   target: MenuTarget;
 };
 
+// Same items, order and names as the footer tabs.
 const menuItems: MenuItem[] = [
   { label: "Home", icon: "home-outline", target: { tab: "Home" } },
-  { label: "About Our Temple", icon: "business-outline", target: { tab: "Temple" } },
+  { label: "About", icon: "business-outline", target: { tab: "Temple" } },
   { label: "Pooja Services", icon: "flower-outline", target: { tab: "Updates" } },
-  { label: "Book a Pooja", icon: "calendar-outline", target: { route: "BookPooja" } },
   { label: "Deeksha", icon: "ellipse-outline", target: { tab: "Deeksha" } },
   { label: "Resources", icon: "book-outline", target: { tab: "Songs" } },
-  { label: "Harivarasanam", icon: "musical-notes-outline", target: { route: "Harivarasanam" } },
-  { label: "Scriptures", icon: "library-outline", target: { route: "Scriptures" } },
-  { label: "Wallpapers", icon: "images-outline", target: { route: "Wallpapers" } },
-  { label: "Downloads", icon: "download-outline", target: { route: "Downloads" } },
-  { label: "Contact & Location", icon: "location-outline", target: { route: "ContactTemple" } },
   { label: "Profile", icon: "person-outline", target: { tab: "Profile" } },
-  { label: "Admin", icon: "shield-checkmark-outline", target: { route: "Admin" } },
+  { label: "Start Deeksha", icon: "notifications-outline", target: { route: "StartDeeksha" } },
 ];
 
 export function AppHeader({
   onUpdates,
   onMenuNavigate,
+  onBack,
+  onMenuOpen,
+  deekshaActive = false,
 }: {
   onUpdates: () => void;
   onMenuNavigate?: (target: MenuTarget) => void;
+  /** When set, a back arrow is shown at the left of the header. */
+  onBack?: () => void;
+  /** Called when the menu opens, so the Start/End Deeksha label is current. */
+  onMenuOpen?: () => void;
+  deekshaActive?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  // Measured outside the Modal: safe-area insets are not reliable inside it.
+  const insets = useSafeAreaInsets();
   const select = (target: MenuTarget) => {
     setOpen(false);
     if (onMenuNavigate) onMenuNavigate(target);
@@ -84,6 +89,17 @@ export function AppHeader({
   return (
     <SafeAreaView edges={["top"]} style={s.topSafeArea}>
       <View style={s.header}>
+        {onBack ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            hitSlop={10}
+            onPress={onBack}
+            style={({ pressed }) => [s.headerBack, pressed && s.pressed]}
+          >
+            <Icon name="chevron-back" color={colors.cream} size={26} />
+          </Pressable>
+        ) : null}
         <View style={{ flex: 1 }}>
           <Text accessibilityRole="header" style={s.brand} numberOfLines={1} adjustsFontSizeToFit>
             {TEMPLE.name}
@@ -105,7 +121,10 @@ export function AppHeader({
           accessibilityRole="button"
           accessibilityLabel="Open menu"
           hitSlop={10}
-          onPress={() => setOpen(true)}
+          onPress={() => {
+            onMenuOpen?.();
+            setOpen(true);
+          }}
           style={({ pressed }) => [s.headerAction, pressed && s.pressed]}
         >
           <Icon name="menu" color={colors.cream} size={26} />
@@ -115,12 +134,13 @@ export function AppHeader({
         visible={open}
         transparent
         animationType="fade"
+        statusBarTranslucent
         onRequestClose={() => setOpen(false)}
       >
         <View style={s.menuRoot}>
           <Pressable style={s.menuBackdrop} onPress={() => setOpen(false)} />
-          <SafeAreaView edges={["top", "bottom"]} style={s.menuPanel}>
-            <View style={s.menuHeader}>
+          <View style={[s.menuPanel, { paddingBottom: insets.bottom }]}>
+            <View style={[s.menuHeader, { paddingTop: insets.top + 14 }]}>
               <View style={{ flex: 1 }}>
                 <Text style={s.brand}>{TEMPLE.name}</Text>
                 <Text style={s.tagline}>MENU</Text>
@@ -144,25 +164,43 @@ export function AppHeader({
                   style={({ pressed }) => [s.menuItem, pressed && s.menuItemPressed]}
                 >
                   <View style={s.menuIcon}>
-                    <Icon name={item.icon} size={20} color={colors.maroon} />
+                    {"tab" in item.target ? (
+                      (() => {
+                        const def = icons[item.target.tab];
+                        return def.set === "mci" ? (
+                          <MaterialCommunityIcons name={def.inactive} size={22} color={colors.maroon} />
+                        ) : (
+                          <Icon name={def.inactive} size={20} color={colors.maroon} />
+                        );
+                      })()
+                    ) : (
+                      <Icon name={item.icon} size={20} color={colors.maroon} />
+                    )}
                   </View>
-                  <Text style={s.menuLabel}>{item.label}</Text>
+                  <Text style={s.menuLabel}>
+                    {"route" in item.target && item.target.route === "StartDeeksha" && deekshaActive
+                      ? "End Deeksha"
+                      : item.label}
+                  </Text>
                   <Icon name="chevron-forward" size={18} color={colors.gold} />
                 </Pressable>
               ))}
             </ScrollView>
-            <Pressable
-              accessibilityRole="link"
-              accessibilityLabel="App developed by VARK Traditions. Opens varktraditions.com"
-              onPress={() => Linking.openURL("https://varktraditions.com/")}
-              style={({ pressed }) => [s.credit, pressed && { opacity: 0.6 }]}
-            >
+            <View style={s.credit}>
               <Text style={s.creditText}>
-                App developed by <Text style={s.creditLink}>VARK Traditions</Text>
+                App Developed and Sponsored By{"\n"}
+                <Text
+                  accessibilityRole="link"
+                  accessibilityLabel="VARK Traditions. Opens varktraditions.com"
+                  suppressHighlighting={false}
+                  onPress={() => Linking.openURL("https://varktraditions.com/")}
+                  style={s.creditLink}
+                >
+                  VARK Traditions
+                </Text>
               </Text>
-              <Text style={s.creditUrl}>varktraditions.com</Text>
-            </Pressable>
-          </SafeAreaView>
+            </View>
+          </View>
         </View>
       </Modal>
     </SafeAreaView>
@@ -257,6 +295,14 @@ const s = StyleSheet.create({
     fontWeight: "700",
     marginTop: 3,
   },
+  headerBack: {
+    width: 36,
+    height: 40,
+    marginLeft: -6,
+    marginRight: 4,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   headerAction: {
     flexShrink: 0,
     width: 44,
@@ -272,12 +318,10 @@ const s = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.line,
   },
-  creditText: { color: colors.muted, fontSize: 12 },
-  creditLink: { color: colors.maroon, fontWeight: "700" },
-  creditUrl: {
-    color: colors.saffron,
-    fontSize: 12,
-    marginTop: 2,
+  creditText: { color: colors.muted, fontSize: 12, textAlign: "center" },
+  creditLink: {
+    color: colors.maroon,
+    fontWeight: "700",
     textDecorationLine: "underline",
   },
   menuBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)" },
@@ -290,7 +334,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 18,
-    paddingVertical: 16,
+    paddingBottom: 16,
     backgroundColor: colors.maroonDeep,
     borderBottomWidth: 2,
     borderBottomColor: colors.goldFill,

@@ -13,6 +13,8 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { BackButton, Icon, IconName } from "../components/UI";
 import type { RootStackParamList } from "../types";
 import { colors } from "../theme";
+import { DEEKSHA_REGISTRATION_ENABLED, showComingSoon } from "../features";
+import QuickLinksFab from "../components/QuickLinksFab";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 // ---------------------------------------------------------------------------
@@ -128,14 +130,23 @@ const RESOURCES: { icon: IconName; label: string; onPress?: (n: Nav) => void }[]
     label: "Ayyappa Deeksha",
     onPress: (n) => n.navigate("MainTabs", { screen: "Deeksha" }),
   },
-  { icon: "ellipse-outline", label: "Maladharana" },
-  { icon: "home-outline", label: "House Pooja Guidelines" },
+  { icon: "ellipse-outline", label: "Maladharana", onPress: (n) => goMaladharana(n) },
+  { icon: "home-outline", label: "Book Home Padi Puja", onPress: (n) => n.navigate("HomePadiPuja") },
   {
     icon: "create-outline",
     label: "Irumudi Registration",
-    onPress: (n) => n.navigate("IrumudiRegistration"),
+    onPress: (n) => goIrumudiRegistration(n),
   },
 ];
+
+function goMaladharana(n: Nav) {
+  if (DEEKSHA_REGISTRATION_ENABLED) n.navigate("Maladharana");
+  else showComingSoon("Maladharana", "Maladharana registration");
+}
+function goIrumudiRegistration(n: Nav) {
+  if (DEEKSHA_REGISTRATION_ENABLED) n.navigate("IrumudiRegistration");
+  else showComingSoon("Irumudi Registration", "Irumudi registration");
+}
 
 const SIGNIFICANCE = {
   title: "Spiritual Significance — Ātma Samarpanam",
@@ -157,8 +168,9 @@ const NOTE = {
 export default function IrumudiScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [open, setOpen] = useState<number | null>(0);
-  const goRegister = () => navigation.navigate("IrumudiRegistration");
+  const goRegister = () => goIrumudiRegistration(navigation);
   return (
+    <View style={s.root}>
     <ScrollView
       style={s.root}
       contentContainerStyle={s.content}
@@ -299,11 +311,7 @@ export default function IrumudiScreen() {
 
         {/* Related resources */}
         <Text style={s.resourcesTitle}>Related Resources</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={s.resources}
-        >
+        <View style={s.resources}>
           {RESOURCES.map((r) => (
             <Pressable
               key={r.label}
@@ -324,9 +332,18 @@ export default function IrumudiScreen() {
               <Icon name="chevron-forward" size={18} color={colors.saffron} />
             </Pressable>
           ))}
-        </ScrollView>
+        </View>
       </View>
     </ScrollView>
+    <QuickLinksFab
+      actions={RESOURCES.filter((r) => r.onPress).map((r) => ({
+        label: r.label,
+        icon: r.icon,
+        mci: r.label === "Maladharana" ? "necklace" : undefined,
+        onPress: () => r.onPress!(navigation),
+      }))}
+    />
+    </View>
   );
 }
 
@@ -434,13 +451,13 @@ const s = StyleSheet.create({
     marginTop: 22,
     marginBottom: 10,
   },
-  resources: { gap: 10, paddingRight: 16 },
+  resources: { gap: 10 },
   resource: {
-    width: 190,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    padding: 10,
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     borderRadius: 14,
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -453,5 +470,5 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  resourceLabel: { flex: 1, color: colors.maroon, fontSize: 13, fontWeight: "600" },
+  resourceLabel: { flex: 1, color: colors.maroon, fontSize: 15, fontWeight: "700" },
 });

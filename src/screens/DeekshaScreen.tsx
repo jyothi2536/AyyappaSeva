@@ -14,6 +14,9 @@ import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import type { RootStackParamList, TabParamList } from "../types";
 import { Icon, IconName } from "../components/UI";
 import { colors } from "../theme";
+import DeekshaCountdown from "../components/DeekshaCountdown";
+import QuickLinksFab from "../components/QuickLinksFab";
+import { DEEKSHA_REGISTRATION_ENABLED, showComingSoon } from "../features";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 // ---------------------------------------------------------------------------
@@ -119,9 +122,9 @@ const NOTE = {
   body: "These guidelines are based on traditional practices. Observances may vary according to lineage and individual circumstances. For specific questions or guidance, please consult your Guruswamy or temple priest.",
 };
 
-const RESOURCES: { icon: IconName; label: string; route?: "Irumudi" }[] = [
-  { icon: "ellipse-outline", label: "Maladharana" },
-  { icon: "home-outline", label: "House Pooja Guidelines" },
+const RESOURCES: { icon: IconName; label: string; route?: "Irumudi" | "Maladharana" | "HomePadiPuja" }[] = [
+  { icon: "ellipse-outline", label: "Maladharana", route: "Maladharana" },
+  { icon: "home-outline", label: "Book Home Padi Puja", route: "HomePadiPuja" },
   { icon: "bag-handle-outline", label: "Irumudi", route: "Irumudi" },
 ];
 
@@ -131,7 +134,16 @@ export default function DeekshaScreen() {
   const [open, setOpen] = useState<number | null>(0);
   const tab = useNavigation<BottomTabNavigationProp<TabParamList>>();
   const root = tab.getParent<NativeStackNavigationProp<RootStackParamList>>();
+  const openResource = (r: (typeof RESOURCES)[number]) => {
+    if (!r.route) return;
+    if (!DEEKSHA_REGISTRATION_ENABLED && r.route === "Maladharana") {
+      showComingSoon(r.label, `${r.label} registration`);
+      return;
+    }
+    root?.navigate(r.route);
+  };
   return (
+    <View style={s.root}>
     <ScrollView
       style={s.root}
       contentContainerStyle={s.content}
@@ -157,6 +169,7 @@ export default function DeekshaScreen() {
       </ImageBackground>
 
       <View style={s.page}>
+        <DeekshaCountdown />
         {/* About */}
         <View style={s.about}>
           <View style={[s.circle, { backgroundColor: colors.maroonSoft }]}>
@@ -216,16 +229,12 @@ export default function DeekshaScreen() {
 
         {/* Related resources */}
         <Text style={s.resourcesTitle}>Related Deeksha Resources</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={s.resources}
-        >
+        <View style={s.resources}>
           {RESOURCES.map((r) => (
             <Pressable
               key={r.label}
               accessibilityRole="button"
-              onPress={r.route ? () => root?.navigate(r.route!) : undefined}
+              onPress={() => openResource(r)}
               style={({ pressed }) => [s.resource, pressed && { opacity: 0.75 }]}
             >
               <View style={[s.circle, { backgroundColor: colors.maroonSoft }]}>
@@ -241,9 +250,18 @@ export default function DeekshaScreen() {
               <Icon name="chevron-forward" size={18} color={colors.saffron} />
             </Pressable>
           ))}
-        </ScrollView>
+        </View>
       </View>
     </ScrollView>
+    <QuickLinksFab
+      actions={RESOURCES.filter((r) => r.route).map((r) => ({
+        label: r.label,
+        icon: r.icon,
+        mci: r.label === "Maladharana" ? "necklace" : undefined,
+        onPress: () => openResource(r),
+      }))}
+    />
+    </View>
   );
 }
 
@@ -337,17 +355,17 @@ const s = StyleSheet.create({
     marginTop: 22,
     marginBottom: 10,
   },
-  resources: { gap: 10, paddingRight: 16 },
+  resources: { gap: 10 },
   resource: {
-    width: 190,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    padding: 10,
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     borderRadius: 14,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.line,
   },
-  resourceLabel: { flex: 1, color: colors.maroon, fontSize: 13, fontWeight: "600" },
+  resourceLabel: { flex: 1, color: colors.maroon, fontSize: 15, fontWeight: "700" },
 });

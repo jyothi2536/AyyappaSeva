@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import DeekshaCountdown from "../components/DeekshaCountdown";
+import LiveCard from "../components/LiveCard";
 import {
   Alert,
   Image,
@@ -80,6 +82,8 @@ export default function HomeScreen() {
         </ImageBackground>
       </View>
       <View style={s.page}>
+        <LiveCard />
+        <DeekshaCountdown />
         <View style={s.today}>
           <View style={s.todayHead}>
             <Icon name="business" size={22} color={colors.gold} />
@@ -131,15 +135,11 @@ export default function HomeScreen() {
           <Pressable
             accessibilityRole="button"
             style={[s.quick, s.quickGold]}
-            onPress={() =>
-              devotee
-                ? root?.navigate("BookPooja")
-                : root?.navigate("DevoteeLogin", { next: "BookPooja" })
-            }
+            onPress={() => Alert.alert("Book a Pooja", "Online pooja booking is coming soon.")}
           >
             <Icon name="create-outline" color={colors.saffron} size={30} />
             <Text style={s.quickTitle}>Book a Pooja</Text>
-            <Text style={s.quickSub}>Seva & Offerings</Text>
+            <Text style={s.quickSub}>Coming Soon</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"

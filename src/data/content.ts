@@ -3,7 +3,6 @@ import type {
   Language,
   Song,
   Update,
-  Wallpaper,
 } from "../types";
 
 export const TEMPLE = {
@@ -435,14 +434,6 @@ export const builtInDocuments: BuiltInDocument[] = [
     assetSource: require("../../assets/documents/atlanta-sankalpam-reference-2025-2030.docx"),
   },
   {
-    id: "irumudi-guidelines",
-    title: "Irumudi Guidelines",
-    subtitle: "Pilgrimage preparation · 2 pages",
-    type: "PDF",
-    category: "GUIDELINES",
-    assetSource: require("../../assets/documents/irumudi-guidelines.pdf"),
-  },
-  {
     id: "sambasiva",
     title: "Sambasiva",
     subtitle: "Devotional song sheet · 1 page",
@@ -546,56 +537,5 @@ export const localizedUpdates: Record<Language, Update[]> = {
     },
   ],
 };
-export const wallpapers = [
-  {
-    id: "ayyappa",
-    name: "Lord Ayyappa",
-    subtitle: "Atlanta Ayyappa Temple",
-    source: require("../../assets/temple/ayyappa7.jpg"),
-    accent: "#E9B949",
-  },
-  {
-    id: "ganesha",
-    name: "Lord Ganesha",
-    subtitle: "Auspicious grace",
-    source: require("../../assets/wallpapers/ganesha.png"),
-    accent: "#D65B3B",
-  },
-  {
-    id: "murugan",
-    name: "Lord Murugan",
-    subtitle: "Vel of wisdom",
-    source: require("../../assets/wallpapers/murugan.png"),
-    accent: "#278D83",
-  },
-  {
-    id: "shiva",
-    name: "Lord Shiva",
-    subtitle: "Moonlit Kailash",
-    source: require("../../assets/wallpapers/shiva.png"),
-    accent: "#6EA6CA",
-  },
-  {
-    id: "durga",
-    name: "Goddess Durga",
-    subtitle: "Divine strength",
-    source: require("../../assets/wallpapers/durga.png"),
-    accent: "#C54032",
-  },
-  {
-    id: "venkateswara",
-    name: "Lord Venkateswara",
-    subtitle: "Sacred abundance",
-    source: require("../../assets/wallpapers/venkateswara.png"),
-    accent: "#C89A35",
-  },
-  {
-    id: "hanuman",
-    name: "Lord Hanuman",
-    subtitle: "Courage & devotion",
-    source: require("../../assets/wallpapers/hanuman.png"),
-    accent: "#E6782F",
-  },
-] as const satisfies readonly Wallpaper[];
 export const homeTempleImage = require("../../assets/temple/ayyappa4.jpg");
-export const welcomeTempleImage = require("../../assets/temple/ayyappa-home-new.jpeg");
+export const welcomeTempleImage = require("../../assets/temple/welcome-mandalam.webp");

@@ -86,30 +86,16 @@ export function Page({
     <View style={s.root}>{content}</View>
   );
 }
-export function BackButton({
-  navigation,
-  label = "Back",
-  compact = false,
-}: {
+/**
+ * Back navigation now lives in the shared app header (see AppChrome), so the
+ * in-page button renders nothing. Kept so existing screens need no changes.
+ */
+export function BackButton(_props: {
   navigation: { goBack: () => void };
   label?: string;
   compact?: boolean;
 }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      hitSlop={12}
-      style={({ pressed }) => [
-        s.back,
-        compact && s.backCompact,
-        pressed && { opacity: 0.65 },
-      ]}
-      onPress={() => navigation.goBack()}
-    >
-      <Icon name="chevron-back" size={25} color={colors.gold} />
-      <Text style={s.backText}>{label}</Text>
-    </Pressable>
-  );
+  return null;
 }
 export function Card({
   children,
@@ -180,26 +166,6 @@ const s = StyleSheet.create({
     borderColor: "rgba(168,118,26,.4)",
   },
   buttonText: { color: colors.ink, fontWeight: "900", fontSize: 13 },
-  back: {
-    minHeight: 54,
-    minWidth: 124,
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 12,
-    paddingHorizontal: 13,
-    borderRadius: 16,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  backCompact: {
-    minHeight: 48,
-    minWidth: 104,
-    marginBottom: 0,
-  },
-  backText: { color: colors.gold, fontSize: 13, fontWeight: "800" },
   card: {
     backgroundColor: colors.surface,
     borderRadius: 20,

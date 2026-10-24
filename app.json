@@ -25,13 +25,23 @@
       ],
       "react-native-pdf-jsi",
       [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Ayyappa Seva uses your approximate location to calculate today's sunrise and sunset times for your Deeksha puja reminders.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ],
+      [
         "expo-notifications",
         {
           "color": "#E9B949",
           "defaultChannel": "event-reminders"
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-web-browser"
     ],
     "ios": {
       "supportsTablet": true,
@@ -50,6 +60,7 @@
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
       "blockedPermissions": [
+        "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
         "android.permission.READ_MEDIA_IMAGES",

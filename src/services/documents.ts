@@ -40,16 +40,41 @@ export async function readDocx(uri: string) {
     throw new Error("No readable text was found in this DOCX file.");
   return paragraphs.join("\n\n");
 }
+/**
+ * Returns a readable file path for a bundled book without making a copy.
+ * On iOS this is the file inside the app itself; on Android expo-asset
+ * unpacks it once into the cache.
+ */
 export async function prepareBuiltInDocument(document: BuiltInDocument) {
-  if (!FileSystem.documentDirectory)
-    throw new Error("App storage is unavailable.");
-  const destination = `${FileSystem.documentDirectory}offline-${document.id}.${document.type.toLowerCase()}`;
-  const existing = await FileSystem.getInfoAsync(destination);
-  if (existing.exists) return destination;
   const asset = Asset.fromModule(document.assetSource);
   await asset.downloadAsync();
   const source = asset.localUri ?? asset.uri;
   if (!source) throw new Error("The bundled document could not be prepared.");
-  await FileSystem.copyAsync({ from: source, to: destination });
-  return destination;
+  return source;
+}
+
+/** Removes the full copies older versions saved in app storage (about 19 MB). */
+async function removeOldCopies() {
+  const dir = FileSystem.documentDirectory;
+  if (!dir) return;
+  const names = await FileSystem.readDirectoryAsync(dir).catch(() => [] as string[]);
+  await Promise.all(
+    names
+      .filter((name) => name.startsWith("offline-"))
+      .map((name) => FileSystem.deleteAsync(`${dir}${name}`, { idempotent: true }).catch(() => undefined)),
+  );
+}
+
+let preparingAll: Promise<void> | null = null;
+/** Makes every bundled book ready to open (once per launch). */
+export function prepareAllBuiltInDocuments(documents: BuiltInDocument[]) {
+  if (!preparingAll) {
+    preparingAll = (async () => {
+      await removeOldCopies();
+      for (const document of documents) {
+        await prepareBuiltInDocument(document).catch(() => undefined);
+      }
+    })();
+  }
+  return preparingAll;
 }

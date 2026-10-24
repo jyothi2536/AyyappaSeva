@@ -3,8 +3,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function isAdmin() {
+      // Older admin docs have no "role" field; the app treats them as "admin", so match that here.
       return request.auth != null
-        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['admin', 'superAdmin'];
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.get('role', 'admin') in ['admin', 'superAdmin'];
     }
 
     function isSuperAdmin() {
@@ -23,6 +25,16 @@ service cloud.firestore {
     }
 
     match /today/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /live/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /wallpapers/{wallpaperId} {
       allow read: if true;
       allow create, update, delete: if isAdmin();
     }

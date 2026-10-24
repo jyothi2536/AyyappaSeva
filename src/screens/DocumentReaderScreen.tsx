@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  FlatList,
   Linking,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -66,6 +66,10 @@ export default function DocumentReaderScreen({
     }
   };
   const isPdf = document.type === "PDF";
+  const paragraphs = React.useMemo(
+    () => text.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean),
+    [text],
+  );
   return (
     <View style={s.root}>
       <View style={s.headerSafeArea}>
@@ -145,14 +149,26 @@ export default function DocumentReaderScreen({
       ) : error ? (
         <Empty icon="alert-circle-outline" text={error} />
       ) : (
-        <ScrollView style={s.paper} contentContainerStyle={s.paperContent}>
-          <Text
-            selectable
-            style={[s.documentText, { fontSize, lineHeight: fontSize * 1.65 }]}
-          >
-            {text}
-          </Text>
-        </ScrollView>
+        // One <Text> per paragraph: iOS draws a single very tall Text as blank.
+        <FlatList
+          style={s.paper}
+          contentContainerStyle={s.paperContent}
+          data={paragraphs}
+          keyExtractor={(_, index) => String(index)}
+          initialNumToRender={30}
+          windowSize={11}
+          renderItem={({ item }) => (
+            <Text
+              selectable
+              style={[
+                s.documentText,
+                { fontSize, lineHeight: fontSize * 1.65, marginBottom: fontSize * 0.8 },
+              ]}
+            >
+              {item}
+            </Text>
+          )}
+        />
       )}
     </View>
   );

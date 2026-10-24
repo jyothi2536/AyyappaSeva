@@ -40,9 +40,11 @@ async function setupNavigator() {
       ...require("react"),
       useState: (initial) => [initial, (tab) => selectedTabs.push(tab)],
       useCallback: (callback) => callback,
+      useRef: (current) => ({ current }),
+      useEffect: () => {},
     },
     "react/jsx-runtime": require("react/jsx-runtime"),
-    "react-native": { View: "View", StyleSheet: { create: (styles) => styles } },
+    "react-native": { View: "View", Alert: { alert() {} }, StyleSheet: { create: (styles) => styles } },
     "@react-navigation/native": {
       createNavigationContainerRef: () => navigationRef,
       NavigationContainer: "NavigationContainer",
@@ -58,6 +60,9 @@ async function setupNavigator() {
     },
     "../components/AppChrome": { AppHeader: "AppHeader", AppFooter: "AppFooter" },
     "../theme": { colors: {} },
+    "expo-notifications": { getLastNotificationResponseAsync: async () => null, addNotificationResponseReceivedListener: () => ({ remove() {} }) },
+    "../services/deeksha": { IRUMUDI_ROUTE: "Irumudi" },
+    "../components/StartDeekshaSheet": { __esModule: true, default: () => null },
   };
   const { default: AppNavigator } = loadSource("src/navigation/AppNavigator.tsx", (name) => {
     if (name.startsWith("../screens/")) return name;
@@ -83,7 +88,7 @@ test("admin screens use the shared header/footer layout, not native modals", asy
   assert.equal(stack.props.screenOptions.presentation, "card");
   assert.equal(tree.some((node) => /modal|sheet/i.test(node.props?.screenOptions?.presentation ?? "")), false);
   const adminRoutes = nodes(stack).filter((node) => node.type === "Screen" && node.props.name.startsWith("Admin"));
-  assert.equal(adminRoutes.length, 5);
+  assert.equal(adminRoutes.length, 6);
 });
 
 for (const tab of ["Home", "Temple", "Updates", "Deeksha", "Songs", "Profile"]) {
