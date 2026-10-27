@@ -65,6 +65,10 @@ export type Update = {
   body: string;
   date: string;
   pinned?: boolean;
+  /** Optional photo uploaded by the admin (Firebase Storage download URL). */
+  imageUrl?: string;
+  /** Storage path of the photo, kept so it can be deleted with the update. */
+  imagePath?: string;
 };
 export type Wallpaper = {
   id: string;
@@ -87,7 +91,33 @@ export type DeityKey =
   | "murugan"
   | "hanuman";
 
-export type ScheduleItem = { time: string; name: string };
+export type ScheduleItem = {
+  time: string;
+  name: string;
+  /** Optional photo for this pooja (Firebase Storage download URL). */
+  imageUrl?: string;
+  /** Storage path of the photo, kept so it can be deleted. */
+  imagePath?: string;
+};
+
+export type WeekdayKey = "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
+
+/** One weekday's puja at the temple, entered by the admin. */
+export type WeeklyDay = {
+  /** e.g. "Lord Shiva Puja" */
+  name: string;
+  /** e.g. "6:30 PM" */
+  time: string;
+  imageUrl?: string;
+  imagePath?: string;
+};
+
+/** The repeating weekly schedule shown in "Today at the Temple". */
+export type WeeklySchedule = {
+  openTime: string;
+  closeTime: string;
+  days: Partial<Record<WeekdayKey, WeeklyDay>>;
+};
 
 export type TodaySchedule = {
   /** YYYY-MM-DD the schedule applies to */
@@ -119,6 +149,7 @@ export type RootStackParamList = {
   AdminPadiPuja: { eventId?: string } | undefined;
   AdminCalendar: undefined;
   AdminToday: undefined;
+  AdminUpdates: undefined;
   AdminWallpapers: undefined;
   DevoteeLogin: { next?: "BookPooja" } | undefined;
   DevoteeSignUp: { next?: "BookPooja" } | undefined;

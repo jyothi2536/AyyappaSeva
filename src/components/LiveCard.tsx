@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Image, Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Image, Linking, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { WebView } from "react-native-webview";
 import { Icon } from "./UI";
 import { colors } from "../theme";
@@ -16,6 +16,10 @@ allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscree
 export default function LiveCard() {
   const [live, setLive] = useState<LiveState | null>(null);
   const [playing, setPlaying] = useState(false);
+  // The YouTube embed is blocked for this channel's streams ("Video unavailable"),
+  // while the regular watch page plays fine in the WebView, so use it by default.
+  const [fallback, setFallback] = useState(true);
+  const [full, setFull] = useState(false);
   const pulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => subscribeToLive(setLive), []);
@@ -38,8 +42,36 @@ export default function LiveCard() {
   if (!live) return null;
   const title = live.title.replace(/^🔴\s*/, "") || "Live from Atlanta Ayyappa Temple";
 
+  const player = (
+    <WebView
+            source={
+              fallback
+                ? { uri: liveWatchUrl(live.videoId).replace("www.youtube.com", "m.youtube.com") }
+                : {
+                    uri: liveEmbedUrl(live.videoId),
+                    headers: { Referer: "https://ayyappaseva-fb811.web.app/" },
+                  }
+            }
+            allowsInlineMediaPlayback
+            allowsFullscreenVideo
+            mediaPlaybackRequiresUserAction={false}
+            javaScriptEnabled
+            domStorageEnabled
+            setSupportMultipleWindows={false}
+            style={{ backgroundColor: "#000" }}
+          />
+  );
+
   return (
     <View style={s.card}>
+      <Modal visible={full} animationType="fade" supportedOrientations={["portrait", "landscape"]} onRequestClose={() => setFull(false)}>
+        <View style={s.full}>
+          {full ? player : null}
+          <Pressable accessibilityLabel="Close full screen" onPress={() => setFull(false)} style={s.close} hitSlop={10}>
+            <Icon name="close" size={26} color="#fff" />
+          </Pressable>
+        </View>
+      </Modal>
       <View style={s.head}>
         <View style={s.badge}>
           <Animated.View style={[s.dot, { opacity: pulse }]} />
@@ -51,17 +83,12 @@ export default function LiveCard() {
       </View>
       {playing ? (
         <View style={s.player}>
-          <WebView
-            source={{
-              html: embedHtml(liveEmbedUrl(live.videoId)),
-              baseUrl: "https://ayyappaseva-fb811.web.app",
-            }}
-            allowsInlineMediaPlayback
-            allowsFullscreenVideo
-            mediaPlaybackRequiresUserAction={false}
-            javaScriptEnabled
-            style={{ backgroundColor: "#000" }}
-          />
+          {full ? null : player}
+          {full ? null : (
+            <Pressable accessibilityLabel="Full screen" onPress={() => setFull(true)} style={s.expand} hitSlop={8}>
+              <Icon name="expand" size={20} color="#fff" />
+            </Pressable>
+          )}
         </View>
       ) : (
         <Pressable onPress={() => setPlaying(true)} style={s.player}>
@@ -78,6 +105,11 @@ export default function LiveCard() {
           </View>
         </Pressable>
       )}
+      {playing && !fallback ? (
+        <Pressable onPress={() => setFallback(true)} hitSlop={8}>
+          <Text style={s.alt}>Video unavailable? Tap here to play in the app</Text>
+        </Pressable>
+      ) : null}
       <Text style={s.title} numberOfLines={2}>
         {title}
       </Text>
@@ -119,5 +151,9 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   title: { color: colors.text, fontSize: 14, fontWeight: "800", marginTop: 10 },
+  expand: { position: "absolute", right: 8, bottom: 8, backgroundColor: "rgba(0,0,0,.6)", borderRadius: 8, padding: 6 },
+  full: { flex: 1, backgroundColor: "#000", justifyContent: "center" },
+  close: { position: "absolute", top: 50, right: 18, backgroundColor: "rgba(0,0,0,.6)", borderRadius: 20, padding: 6 },
+  alt: { color: "#E62117", fontSize: 12, fontWeight: "800", marginTop: 8 },
   sub: { color: colors.muted, fontSize: 11, marginTop: 4 },
 });

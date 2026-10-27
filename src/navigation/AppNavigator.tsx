@@ -43,7 +43,8 @@ import AdminScreen from "../screens/AdminScreen";
 import AdminTempleEventScreen from "../screens/AdminTempleEventScreen";
 import AdminPadiPujaScreen from "../screens/AdminPadiPujaScreen";
 import AdminCalendarScreen from "../screens/AdminCalendarScreen";
-import AdminTodayScreen from "../screens/AdminTodayScreen";
+import AdminTodayScreen from "../screens/AdminWeeklyScreen";
+import AdminUpdatesScreen from "../screens/AdminUpdatesScreen";
 import AdminWallpapersScreen from "../screens/AdminWallpapersScreen";
 import DevoteeLoginScreen from "../screens/DevoteeLoginScreen";
 import DevoteeSignUpScreen from "../screens/DevoteeSignUpScreen";
@@ -120,6 +121,7 @@ const AdminTempleEventScreenAnimated = withScreenMotion(AdminTempleEventScreen);
 const AdminPadiPujaScreenAnimated = withScreenMotion(AdminPadiPujaScreen);
 const AdminCalendarScreenAnimated = withScreenMotion(AdminCalendarScreen);
 const AdminTodayScreenAnimated = withScreenMotion(AdminTodayScreen);
+const AdminUpdatesScreenAnimated = withScreenMotion(AdminUpdatesScreen);
 const AdminWallpapersScreenAnimated = withScreenMotion(AdminWallpapersScreen);
 const DevoteeLoginScreenAnimated = withScreenMotion(DevoteeLoginScreen);
 const DevoteeSignUpScreenAnimated = withScreenMotion(DevoteeSignUpScreen);
@@ -295,6 +297,11 @@ export default function AppNavigator() {
             <Stack.Screen
               name="AdminToday"
               component={AdminTodayScreenAnimated}
+              options={{ animation: "slide_from_right" }}
+            />
+            <Stack.Screen
+              name="AdminUpdates"
+              component={AdminUpdatesScreenAnimated}
               options={{ animation: "slide_from_right" }}
             />
             <Stack.Screen

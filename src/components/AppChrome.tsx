@@ -15,6 +15,7 @@ import { useApp } from "../state/AppContext";
 import type { TabParamList } from "../types";
 import { colors } from "../theme";
 import { Icon } from "./UI";
+import { IS_WEBSITE } from "../platform";
 
 export type AppTab = keyof TabParamList;
 
@@ -53,7 +54,7 @@ type MenuItem = {
 };
 
 // Same items, order and names as the footer tabs.
-const menuItems: MenuItem[] = [
+const menuItems: MenuItem[] = ([
   { label: "Home", icon: "home-outline", target: { tab: "Home" } },
   { label: "About", icon: "business-outline", target: { tab: "Temple" } },
   { label: "Pooja Services", icon: "flower-outline", target: { tab: "Updates" } },
@@ -62,7 +63,7 @@ const menuItems: MenuItem[] = [
   { label: "Profile", icon: "person-outline", target: { tab: "Profile" } },
   { label: "Start Deeksha", icon: "notifications-outline", target: { route: "StartDeeksha" } },
   { label: "Admin", icon: "shield-checkmark-outline", target: { route: "Admin" } },
-];
+] as MenuItem[]).filter((item) => !(IS_WEBSITE && "route" in item.target && item.target.route === "StartDeeksha"));
 
 export function AppHeader({
   onUpdates,

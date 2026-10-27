@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Icon, Page, ScreenHeader } from "../components/UI";
+import { PhotoThumb } from "../components/EventPhoto";
 import { localizedUpdates } from "../data/content";
 import { formatEventDate, localize } from "../data/events";
 import { useApp } from "../state/AppContext";
@@ -62,6 +63,11 @@ export default function UpdatesScreen() {
                 <Text style={s.date}>{item.date}</Text>
               </View>
               <Text style={s.body}>{item.body}</Text>
+              {"imageUrl" in item && item.imageUrl ? (
+                <View style={{ marginTop: 10 }}>
+                  <PhotoThumb uri={item.imageUrl} label={item.title} style={s.photo} />
+                </View>
+              ) : null}
             </View>
           ))}
         </>
@@ -149,6 +155,7 @@ const s = StyleSheet.create({
   title: { color: colors.text, flex: 1, fontSize: 14, fontWeight: "800" },
   date: { color: colors.gold, fontSize: 9 },
   body: { color: colors.muted, fontSize: 11, lineHeight: 18, marginTop: 7 },
+  photo: { width: "100%", height: 180, borderRadius: 12 },
   empty: { alignItems: "center", paddingVertical: 48 },
   emptyText: { color: colors.muted, marginTop: 10 },
 });

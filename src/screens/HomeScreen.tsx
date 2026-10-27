@@ -17,12 +17,13 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Icon } from "../components/UI";
+import { PhotoThumb } from "../components/EventPhoto";
 import { getHomeTempleFraming } from "../components/homeTempleFraming";
 import { homeTempleImage } from "../data/content";
 import { eventStart, formatEventDate, localize } from "../data/events";
 import { verseOfTheDay } from "../data/dailyScripture";
 import { useDevotee } from "../services/devotee";
-import { deityImage, isOpenNow, useTodaySchedule } from "../data/today";
+import { dayFallbackImage, isOpenNowWeekly, pujaForDay, useWeeklySchedule, weekdayKey } from "../data/today";
 import { useApp } from "../state/AppContext";
 import type { RootStackParamList, TabParamList } from "../types";
 import { colors } from "../theme";
@@ -37,9 +38,11 @@ export default function HomeScreen() {
   const nextEvent = events
     .filter((e) => e.kind === "temple" && eventStart(e).getTime() >= now)
     .sort((a, b) => eventStart(a).getTime() - eventStart(b).getTime())[0];
-  const today = useTodaySchedule();
+  const today = useWeeklySchedule();
+  const dayKey = weekdayKey();
+  const puja = pujaForDay(today, dayKey);
   const devotee = useDevotee();
-  const open = isOpenNow(today);
+  const open = isOpenNowWeekly(today);
   const [photoWidth, setPhotoWidth] = useState(0);
   const framing = getHomeTempleFraming(photoWidth);
   const tab = useNavigation<BottomTabNavigationProp<TabParamList>>();
@@ -100,28 +103,26 @@ export default function HomeScreen() {
             </Text>
           </View>
           ) : null}
-          {today.items.length === 0 ? (
+          {!puja ? (
             <View style={s.todayEmpty}>
               <Icon name="calendar-clear-outline" size={22} color={colors.muted} />
-              <Text style={s.todayEmptyText}>No events today</Text>
+              <Text style={s.todayEmptyText}>No puja scheduled today</Text>
             </View>
           ) : (
           <View style={s.todayBody}>
             <Icon name="time-outline" size={24} color={colors.gold} />
             <View style={s.todayList}>
-              {today.items.map((item, index) => (
-                <View key={`${item.time}-${index}`} style={s.todayRow}>
-                  <Text style={s.todayTime}>{item.time}</Text>
-                  <Text style={s.todayName} numberOfLines={2}>
-                    {item.name}
-                  </Text>
-                </View>
-              ))}
+              <View style={s.todayRow}>
+                {puja.time ? <Text style={s.todayTime}>{puja.time}</Text> : null}
+                <Text style={s.todayName} numberOfLines={3}>
+                  {puja.name}
+                </Text>
+              </View>
             </View>
             <View style={s.todayDivider} />
             <Image
-              source={deityImage(today.deity)}
-              accessibilityLabel={`Deity of the day: ${today.deity}`}
+              source={puja.imageUrl ? { uri: puja.imageUrl } : dayFallbackImage(dayKey)}
+              accessibilityLabel={puja.name}
               resizeMode="cover"
               style={s.todayImage}
             />
@@ -233,6 +234,7 @@ export default function HomeScreen() {
                     </Text>
                     <Text style={s.updateDate}>{u.date}</Text>
                   </View>
+                  <PhotoThumb uri={u.imageUrl} label={u.title} style={s.updateThumb} />
                 </View>
               ))
             )}
@@ -318,6 +320,7 @@ const s = StyleSheet.create({
   todayRow: { flexDirection: "row", gap: 10 },
   todayTime: { color: colors.text, fontSize: 12, fontWeight: "600", width: 58 },
   todayName: { color: colors.text, fontSize: 12, flex: 1 },
+  todayThumb: { width: 38, height: 38, borderRadius: 8 },
   todayDivider: { width: 1, alignSelf: "stretch", backgroundColor: colors.line },
   todayImage: { width: 110, height: 120, borderRadius: 12 },
   todayEmpty: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 18, justifyContent: "center" },
@@ -528,6 +531,7 @@ const s = StyleSheet.create({
   pairLink: { color: colors.saffron, fontSize: 12, fontWeight: "700", marginTop: "auto", paddingTop: 8 },
   updateRow: { flexDirection: "row", gap: 8, marginBottom: 10 },
   updateDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.gold, marginTop: 6 },
+  updateThumb: { width: 34, height: 34, borderRadius: 8 },
   updateTitle: { color: colors.text, fontSize: 12, fontWeight: "600", lineHeight: 16 },
   updateDate: { color: colors.muted, fontSize: 10, marginTop: 2 },
   verseText: {

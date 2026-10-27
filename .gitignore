@@ -37,3 +37,7 @@ credentials.json
 # Editor and operating-system files
 .DS_Store
 *.log
+
+# Website build output
+website/dist/
+website/.expo/

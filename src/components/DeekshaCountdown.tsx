@@ -20,11 +20,17 @@ import {
   type DeekshaProgress,
 } from "../services/deeksha";
 import StartDeekshaSheet from "./StartDeekshaSheet";
+import { IS_WEBSITE } from "../platform";
 
 const fmt = (d: Date) => d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 
-/** 41-day Mandala Deeksha countdown. Recomputes on focus and when the app returns to the foreground. */
+/** 41-day Mandala Deeksha countdown (phone app only; hidden on the website). */
 export default function DeekshaCountdown() {
+  return IS_WEBSITE ? null : <PhoneDeekshaCountdown />;
+}
+
+/** Recomputes on focus and when the app returns to the foreground. */
+function PhoneDeekshaCountdown() {
   const navigation = useNavigation<any>();
   const [start, setStart] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);

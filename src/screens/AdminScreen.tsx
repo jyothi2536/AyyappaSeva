@@ -39,16 +39,14 @@ export default function AdminScreen({
     authenticateAdmin,
     leaveAdmin,
     deleteAdminAccount,
-    publishUpdate,
     uploadSong,
     deleteCalendarEvent,
     wallpapers,
+    updates,
   } = useApp();
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("");
   const [signingIn, setSigningIn] = useState(false);
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
   const auth = async () => {
     if (!username.trim() || !password) {
       Alert.alert("Enter the administrator username and password.");
@@ -104,19 +102,6 @@ export default function AdminScreen({
         },
       ],
     );
-  };
-  const publish = async () => {
-    if (!title.trim() || !body.trim())
-      return Alert.alert("Add a title and message.");
-    try {
-      await publishUpdate(title.trim(), body.trim());
-      navigation.popTo("MainTabs", { screen: "Updates" });
-    } catch (reason) {
-      Alert.alert(
-        "Unable to publish",
-        reason instanceof Error ? reason.message : "Please try again.",
-      );
-    }
   };
   const editEvent = (event: CalendarEvent) => {
     if (event.kind === "temple") {
@@ -287,7 +272,7 @@ export default function AdminScreen({
           <AdminAction
             icon="sunny"
             title="Today at the Temple"
-            subtitle="Hours, deity of the day & pooja schedule"
+            subtitle="Hours, deity of the day, pooja schedule & photos"
             onPress={() => navigation.navigate("AdminToday")}
           />
           {WALLPAPERS_ENABLED ? (
@@ -375,16 +360,12 @@ export default function AdminScreen({
             </View>
           )}
           <Text style={s.section}>{eventT.announcements}</Text>
-          <Label text={t.title} />
-          <TextInput value={title} onChangeText={setTitle} style={s.input} />
-          <Label text={t.message} />
-          <TextInput
-            value={body}
-            onChangeText={setBody}
-            multiline
-            style={[s.input, s.multiline]}
+          <AdminAction
+            icon="megaphone"
+            title="Latest Updates"
+            subtitle={`Post news with photos · ${updates.length} published`}
+            onPress={() => navigation.navigate("AdminUpdates")}
           />
-          <GoldButton label={t.publish} icon="send" onPress={publish} />
           <Text style={s.section}>{t.documents}</Text>
           <View style={s.documentCard}>
             <View style={s.documentIcon}>

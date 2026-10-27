@@ -34,6 +34,13 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    match /pushTokens/{tokenId} {
+      allow create, update: if request.resource.data.keys().hasOnly(['token', 'platform', 'updatedAt'])
+        && request.resource.data.token is string
+        && request.resource.data.token.size() < 200;
+      allow read: if isAdmin();
+    }
+
     match /wallpapers/{wallpaperId} {
       allow read: if true;
       allow create, update, delete: if isAdmin();

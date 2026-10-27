@@ -88,7 +88,7 @@ test("admin screens use the shared header/footer layout, not native modals", asy
   assert.equal(stack.props.screenOptions.presentation, "card");
   assert.equal(tree.some((node) => /modal|sheet/i.test(node.props?.screenOptions?.presentation ?? "")), false);
   const adminRoutes = nodes(stack).filter((node) => node.type === "Screen" && node.props.name.startsWith("Admin"));
-  assert.equal(adminRoutes.length, 6);
+  assert.equal(adminRoutes.length, 7);
 });
 
 for (const tab of ["Home", "Temple", "Updates", "Deeksha", "Songs", "Profile"]) {

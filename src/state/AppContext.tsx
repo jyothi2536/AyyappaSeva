@@ -38,6 +38,7 @@ import {
   subscribeToWallpapers,
   updateCalendarEvent,
 } from "../services/firebase";
+import { registerForLivePush } from "../services/livePush";
 import type {
   AdminAccount,
   AdminSession,
@@ -103,6 +104,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminSession, setAdminSession] = useState<AdminSession | null>(null);
   const [adminAccounts, setAdminAccounts] = useState<AdminAccount[]>([]);
+
+  useEffect(() => {
+    void registerForLivePush();
+  }, []);
 
   useEffect(() => {
     (async () => {

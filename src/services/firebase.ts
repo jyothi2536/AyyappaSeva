@@ -15,6 +15,7 @@ import {
   addDoc,
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getDoc,
   getDocs,
@@ -45,6 +46,7 @@ import type {
   TodaySchedule,
   Update,
   Wallpaper,
+  WeeklySchedule,
 } from "../types";
 
 const firebaseConfig = {
@@ -208,6 +210,29 @@ export async function saveTodaySchedule(schedule: TodaySchedule) {
   });
 }
 
+export function subscribeToWeeklySchedule(
+  receive: (schedule: WeeklySchedule | null) => void,
+  fail: (error: Error) => void,
+): Unsubscribe {
+  if (!db) return () => undefined;
+  return onSnapshot(
+    doc(db, "today", "weekly"),
+    (snapshot) => {
+      if (!snapshot.exists()) return receive(null);
+      const { updatedAt: _ignored, ...rest } = snapshot.data();
+      receive(rest as WeeklySchedule);
+    },
+    (error) => fail(error),
+  );
+}
+
+export async function saveWeeklySchedule(schedule: WeeklySchedule) {
+  await setDoc(doc(requireDb(), "today", "weekly"), {
+    ...schedule,
+    updatedAt: serverTimestamp(),
+  });
+}
+
 export function subscribeToUpdates(
   receive: (updates: Update[]) => void,
   fail: (error: Error) => void,
@@ -257,14 +282,52 @@ export async function setLive(live: LiveState) {
   });
 }
 
-export async function addTempleUpdate(title: string, body: string) {
+export type PhotoRef = { url: string; path: string };
+
+async function uploadJpeg(path: string, localUri: string) {
+  if (!app) throw new Error("Firebase is not configured.");
+  const blob = await (await fetch(localUri)).blob();
+  const reference = storageRef(getStorage(app), path);
+  await uploadBytes(reference, blob, { contentType: "image/jpeg" });
+  return getDownloadURL(reference);
+}
+
+/** Uploads one admin photo (already resized to JPEG) for a Today row or an Update. */
+export async function uploadEventPhoto(folder: "today" | "updates", localUri: string): Promise<PhotoRef> {
+  const name = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.jpg`;
+  const path = `${folder}/${name}`;
+  return { url: await uploadJpeg(path, localUri), path };
+}
+
+export async function deleteEventPhoto(path?: string) {
+  if (!app || !path) return;
+  await deleteObject(storageRef(getStorage(app), path)).catch(() => undefined);
+}
+
+export async function addTempleUpdate(title: string, body: string, photo?: PhotoRef | null) {
   await addDoc(collection(requireDb(), "updates"), {
     title,
     body,
     date: "Today",
     pinned: true,
+    ...(photo ? { imageUrl: photo.url, imagePath: photo.path } : {}),
     createdAt: serverTimestamp(),
   });
+}
+
+/** `photo`: a new photo, `null` to remove the current one, `undefined` to leave it unchanged. */
+export async function editTempleUpdate(id: string, title: string, body: string, photo?: PhotoRef | null) {
+  await updateDoc(doc(requireDb(), "updates", id), {
+    title,
+    body,
+    ...(photo ? { imageUrl: photo.url, imagePath: photo.path } : {}),
+    ...(photo === null ? { imageUrl: deleteField(), imagePath: deleteField() } : {}),
+  });
+}
+
+export async function removeTempleUpdate(update: Update) {
+  await deleteDoc(doc(requireDb(), "updates", update.id));
+  await deleteEventPhoto(update.imagePath);
 }
 
 // ---- Wallpapers (images in Storage, list in Firestore) ----------------------
@@ -292,14 +355,6 @@ export function subscribeToWallpapers(
     },
     fail,
   );
-}
-
-async function uploadJpeg(path: string, localUri: string) {
-  if (!app) throw new Error("Firebase is not configured.");
-  const blob = await (await fetch(localUri)).blob();
-  const reference = storageRef(getStorage(app), path);
-  await uploadBytes(reference, blob, { contentType: "image/jpeg" });
-  return getDownloadURL(reference);
 }
 
 export type WallpaperUpload = {

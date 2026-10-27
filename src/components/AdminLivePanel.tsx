@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TextInput, View 
 import { Icon } from "./UI";
 import { colors } from "../theme";
 import { setLive, subscribeToLive, type LiveState } from "../services/firebase";
+import { sendLiveNotification } from "../services/livePush";
 import { extractVideoId, fetchLiveStatus } from "../services/youtube";
 
 /** Admin switch: GO LIVE shows the LIVE card in every app instantly; END LIVE hides it. */
@@ -33,6 +34,7 @@ export default function AdminLivePanel() {
         }
       }
       await setLive({ active: true, videoId, title });
+      void sendLiveNotification(title).catch(() => undefined);
       setLink("");
     } catch (reason) {
       Alert.alert("Unable to go live", reason instanceof Error ? reason.message : "Please try again.");
