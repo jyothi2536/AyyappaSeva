@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { BackButton, GoldButton, Page, ScreenHeader } from "../components/UI";
 import { PhotoField } from "../components/EventPhoto";
@@ -133,7 +133,46 @@ export default function AdminWeeklyScreen({
         const row = rows[key];
         return (
           <View key={key} style={s.day}>
-            <Text style={s.dayLabel}>{label}</Text>
+            <View style={s.dayHead}>
+              <Text style={s.dayLabel}>{label}</Text>
+              {row.name || row.time || row.imageUrl || row.localUri ? (
+                <Pressable
+                  accessibilityRole="button"
+                  hitSlop={8}
+                  onPress={() =>
+                    Alert.alert(
+                      `Clear ${label}?`,
+                      "This removes the puja, timing and picture for this day. Tap Publish to apply it for everyone.",
+                      [
+                        { text: "Cancel", style: "cancel" },
+                        {
+                          text: "Clear",
+                          style: "destructive",
+                          onPress: () =>
+                            patch(key, {
+                              name: "",
+                              time: "",
+                              localUri: undefined,
+                              imageUrl: undefined,
+                              imagePath: undefined,
+                            }),
+                        },
+                      ],
+                    )
+                  }
+                >
+                  <Text style={s.clear}>Clear day</Text>
+                </Pressable>
+              ) : (
+                <Pressable
+                  accessibilityRole="button"
+                  hitSlop={8}
+                  onPress={() => patch(key, { name: DEFAULT_WEEKLY.days[key]?.name ?? `${label} Puja` })}
+                >
+                  <Text style={s.add}>+ Add puja</Text>
+                </Pressable>
+              )}
+            </View>
             <Field
               label="Puja name"
               value={row.name}
@@ -212,7 +251,10 @@ const s = StyleSheet.create({
     padding: 14,
     marginBottom: 12,
   },
-  dayLabel: { color: colors.maroon, fontSize: 16, fontWeight: "800", marginBottom: 10 },
+  dayHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
+  dayLabel: { color: colors.maroon, fontSize: 16, fontWeight: "800" },
+  clear: { color: colors.red, fontSize: 13, fontWeight: "800" },
+  add: { color: colors.maroon, fontSize: 13, fontWeight: "800" },
   saving: {
     height: 54,
     borderRadius: 17,

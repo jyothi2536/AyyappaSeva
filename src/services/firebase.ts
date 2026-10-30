@@ -159,6 +159,7 @@ export async function updateCalendarEvent(
 ) {
   await updateDoc(doc(requireDb(), "events", id), {
     ...input,
+    ...(input.imageUrl ? {} : { imageUrl: deleteField(), imagePath: deleteField() }),
     year: Number(input.date.slice(0, 4)),
     updatedAt: serverTimestamp(),
   });
@@ -293,7 +294,7 @@ async function uploadJpeg(path: string, localUri: string) {
 }
 
 /** Uploads one admin photo (already resized to JPEG) for a Today row or an Update. */
-export async function uploadEventPhoto(folder: "today" | "updates", localUri: string): Promise<PhotoRef> {
+export async function uploadEventPhoto(folder: "today" | "updates" | "events", localUri: string): Promise<PhotoRef> {
   const name = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.jpg`;
   const path = `${folder}/${name}`;
   return { url: await uploadJpeg(path, localUri), path };

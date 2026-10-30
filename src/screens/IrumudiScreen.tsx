@@ -165,39 +165,13 @@ const NOTE = {
 
 // ---------------------------------------------------------------------------
 
-export default function IrumudiScreen() {
+/** Irumudi guidelines content (no hero/scroll wrapper) so it can be embedded in the Guidelines tab. */
+export function IrumudiBody() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [open, setOpen] = useState<number | null>(0);
   const goRegister = () => goIrumudiRegistration(navigation);
   return (
-    <View style={s.root}>
-    <ScrollView
-      style={s.root}
-      contentContainerStyle={s.content}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Hero */}
-      <ImageBackground source={HERO_IMAGE} resizeMode="cover" style={s.hero}>
-        <LinearGradient
-          pointerEvents="none"
-          colors={["rgba(40,6,6,.92)", "rgba(40,6,6,.55)", "rgba(40,6,6,0)"]}
-          locations={[0, 0.55, 1]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={s.heroCopy}>
-          <Text style={s.heroEyebrow}>{HERO.eyebrow.toUpperCase()}</Text>
-          <Text style={s.heroTitle}>{HERO.title}</Text>
-          <View style={s.heroRule} />
-          <Text style={s.heroSub}>{HERO.subtitle}</Text>
-          <Text style={s.heroDevotional}>{HERO.devotional}</Text>
-        </View>
-      </ImageBackground>
-
-      <View style={s.page}>
-        <BackButton navigation={navigation} compact />
-
+    <>
         {/* Intro */}
         <View style={s.intro}>
           <View style={[s.circle, { backgroundColor: colors.maroonSoft }]}>
@@ -308,41 +282,41 @@ export default function IrumudiScreen() {
             <Text style={s.noteBody}>{NOTE.body}</Text>
           </View>
         </View>
+    </>
+  );
+}
 
-        {/* Related resources */}
-        <Text style={s.resourcesTitle}>Related Resources</Text>
-        <View style={s.resources}>
-          {RESOURCES.map((r) => (
-            <Pressable
-              key={r.label}
-              accessibilityRole="button"
-              onPress={r.onPress ? () => r.onPress!(navigation) : undefined}
-              style={({ pressed }) => [s.resource, pressed && { opacity: 0.75 }]}
-            >
-              <View style={[s.resourceIcon, { backgroundColor: colors.maroonSoft }]}>
-                {r.label === "Maladharana" ? (
-                  <MaterialCommunityIcons name="necklace" size={22} color={colors.maroon} />
-                ) : (
-                  <Icon name={r.icon} size={22} color={colors.maroon} />
-                )}
-              </View>
-              <Text style={s.resourceLabel} numberOfLines={2}>
-                {r.label}
-              </Text>
-              <Icon name="chevron-forward" size={18} color={colors.saffron} />
-            </Pressable>
-          ))}
+export default function IrumudiScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  return (
+    <View style={s.root}>
+    <ScrollView
+      style={s.root}
+      contentContainerStyle={s.content}
+      showsVerticalScrollIndicator={false}
+    >
+      <ImageBackground source={HERO_IMAGE} resizeMode="cover" style={s.hero}>
+        <LinearGradient
+          pointerEvents="none"
+          colors={["rgba(40,6,6,.92)", "rgba(40,6,6,.55)", "rgba(40,6,6,0)"]}
+          locations={[0, 0.55, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={s.heroCopy}>
+          <Text style={s.heroEyebrow}>{HERO.eyebrow.toUpperCase()}</Text>
+          <Text style={s.heroTitle}>{HERO.title}</Text>
+          <View style={s.heroRule} />
+          <Text style={s.heroSub}>{HERO.subtitle}</Text>
+          <Text style={s.heroDevotional}>{HERO.devotional}</Text>
         </View>
+      </ImageBackground>
+      <View style={s.page}>
+        <BackButton navigation={navigation} compact />
+        <IrumudiBody />
       </View>
     </ScrollView>
-    <QuickLinksFab
-      actions={RESOURCES.filter((r) => r.onPress).map((r) => ({
-        label: r.label,
-        icon: r.icon,
-        mci: r.label === "Maladharana" ? "necklace" : undefined,
-        onPress: () => r.onPress!(navigation),
-      }))}
-    />
     </View>
   );
 }

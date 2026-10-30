@@ -343,6 +343,30 @@ export const initialSongs: Song[] = [
     subtitle: "Arya Vamsha Sujatha · Offline lyrics",
     type: "TXT",
   },
+  {
+    id: "5",
+    title: "Ayyappa Ashtottara Sata Namavali",
+    subtitle: "108 names · English, Telugu, Tamil & Kannada",
+    type: "TXT",
+  },
+  {
+    id: "6",
+    title: "Durga Ashtottara Sata Namavali",
+    subtitle: "108 names · English, Telugu, Tamil & Kannada",
+    type: "TXT",
+  },
+  {
+    id: "7",
+    title: "Ganesha Ashtottara Sata Namavali",
+    subtitle: "108 names · English, Telugu, Tamil & Kannada",
+    type: "TXT",
+  },
+  {
+    id: "8",
+    title: "Subrahmanya Ashtottara Sata Namavali",
+    subtitle: "108 names · English, Telugu, Tamil & Kannada",
+    type: "TXT",
+  },
 ];
 export const builtInDocuments: BuiltInDocument[] = [
   {

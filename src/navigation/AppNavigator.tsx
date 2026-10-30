@@ -29,6 +29,7 @@ import StartDeekshaSheet from "../components/StartDeekshaSheet";
 import HomeScreen from "../screens/HomeScreen";
 import SongsScreen from "../screens/SongsScreen";
 import UpdatesScreen from "../screens/UpdatesScreen";
+import PoojaScreen from "../screens/PoojaScreen";
 import TempleScreen from "../screens/TempleScreen";
 import DeekshaScreen from "../screens/DeekshaScreen";
 import ProfileScreen from "../screens/ProfileScreen";
@@ -51,13 +52,15 @@ import DevoteeSignUpScreen from "../screens/DevoteeSignUpScreen";
 import BookPoojaScreen from "../screens/BookPoojaScreen";
 import ContactTempleScreen from "../screens/ContactTempleScreen";
 import IrumudiScreen from "../screens/IrumudiScreen";
+import VideoPlayerScreen from "../screens/VideoPlayerScreen";
+import EventDetailScreen from "../screens/EventDetailScreen";
 import IrumudiRegistrationScreen from "../screens/IrumudiRegistrationScreen";
 import HomePadiPujaScreen from "../screens/HomePadiPujaScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tabs = createBottomTabNavigator<TabParamList>();
 const navigationRef = createNavigationContainerRef<RootStackParamList>();
-const tabNames: AppTab[] = ["Home", "Temple", "Updates", "Deeksha", "Songs", "Profile"];
+const tabNames: AppTab[] = ["Home", "Temple", "Events", "Updates", "Deeksha", "Songs", "Profile"];
 
 function withScreenMotion<Props extends object>(Screen: React.ComponentType<Props>) {
   return function MotionScreen(props: Props) {
@@ -106,6 +109,7 @@ function withScreenMotion<Props extends object>(Screen: React.ComponentType<Prop
 const HomeScreenAnimated = withScreenMotion(HomeScreen);
 const SongsScreenAnimated = withScreenMotion(SongsScreen);
 const UpdatesScreenAnimated = withScreenMotion(UpdatesScreen);
+const PoojaScreenAnimated = withScreenMotion(PoojaScreen);
 const TempleScreenAnimated = withScreenMotion(TempleScreen);
 const DeekshaScreenAnimated = withScreenMotion(DeekshaScreen);
 const ProfileScreenAnimated = withScreenMotion(ProfileScreen);
@@ -128,6 +132,8 @@ const DevoteeSignUpScreenAnimated = withScreenMotion(DevoteeSignUpScreen);
 const BookPoojaScreenAnimated = withScreenMotion(BookPoojaScreen);
 const ContactTempleScreenAnimated = withScreenMotion(ContactTempleScreen);
 const IrumudiScreenAnimated = withScreenMotion(IrumudiScreen);
+const VideoPlayerScreenAnimated = withScreenMotion(VideoPlayerScreen);
+const EventDetailScreenAnimated = withScreenMotion(EventDetailScreen);
 const IrumudiRegistrationScreenAnimated = withScreenMotion(IrumudiRegistrationScreen);
 const HomePadiPujaScreenAnimated = withScreenMotion(HomePadiPujaScreen);
 
@@ -142,7 +148,8 @@ function MainTabs() {
     >
   <Tabs.Screen name="Home" component={HomeScreenAnimated} />
   <Tabs.Screen name="Temple" component={TempleScreenAnimated} />
-  <Tabs.Screen name="Updates" component={UpdatesScreenAnimated} />
+  <Tabs.Screen name="Events" component={UpdatesScreenAnimated} />
+  <Tabs.Screen name="Updates" component={PoojaScreenAnimated} />
   <Tabs.Screen name="Deeksha" component={DeekshaScreenAnimated} />
   <Tabs.Screen name="Songs" component={SongsScreenAnimated} />
   <Tabs.Screen name="Profile" component={ProfileScreenAnimated} />
@@ -225,7 +232,7 @@ export default function AppNavigator() {
   return (
     <View style={s.shell}>
       <AppHeader
-        onUpdates={() => navigateToTab("Updates")}
+        onUpdates={() => navigateToTab("Events")}
         onMenuNavigate={navigateFromMenu}
         deekshaActive={deekshaActive}
         onMenuOpen={() => void loadDeekshaStart().then((v) => setDeekshaActive(Boolean(v)))}
@@ -270,6 +277,8 @@ export default function AppNavigator() {
               component={HarivarasanamScreenAnimated}
             />
             <Stack.Screen name="Lyrics" component={LyricsScreenAnimated} />
+            <Stack.Screen name="VideoPlayer" component={VideoPlayerScreenAnimated} />
+            <Stack.Screen name="EventDetail" component={EventDetailScreenAnimated} />
             <Stack.Screen
               name="DocumentReader"
               component={DocumentReaderScreenAnimated}

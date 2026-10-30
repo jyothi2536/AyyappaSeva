@@ -1,9 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { BackButton, GoldButton, Icon, Page, ScreenHeader } from "../components/UI";
+import { BackButton, Icon, Page, ScreenHeader } from "../components/UI";
 import { useDevotee } from "../services/devotee";
-import { signOutDevotee } from "../services/firebase";
 import type { RootStackParamList } from "../types";
 import { colors } from "../theme";
 
@@ -33,6 +32,7 @@ export default function BookPoojaScreen({
         <Icon name="create-outline" size={30} color={colors.saffron} />
         <Text style={s.text}>Pooja booking is coming soon.</Text>
       </View>
+      {/* Sign out is hidden for now; restore this button when booking goes live.
       <View style={{ height: 16 }} />
       <GoldButton
         secondary
@@ -43,6 +43,7 @@ export default function BookPoojaScreen({
           void signOutDevotee().then(() => navigation.goBack());
         }}
       />
+      */}
     </Page>
   );
 }

@@ -43,10 +43,23 @@ export default function SongsScreen() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const open = (song: Song) => {
     if (song.id === "1") return navigation.navigate("Harivarasanam");
+    if (song.id === "2")
+      return navigation.navigate("VideoPlayer", {
+        title: song.title,
+        url: "https://m.youtube.com/watch?v=vE5ShJ705kg&t=2s",
+      });
     if (song.id === "3")
       return navigation.navigate("Lyrics", { kind: "saranams108" });
     if (song.id === "4")
       return navigation.navigate("Lyrics", { kind: "deepaaradhana" });
+    if (song.id === "5")
+      return navigation.navigate("Lyrics", { kind: "ashtottara" });
+    if (song.id === "6")
+      return navigation.navigate("Lyrics", { kind: "durgaAshtottara" });
+    if (song.id === "7")
+      return navigation.navigate("Lyrics", { kind: "ganeshaAshtottara" });
+    if (song.id === "8")
+      return navigation.navigate("Lyrics", { kind: "subrahmanyaAshtottara" });
     if (song.uri)
       return navigation.navigate("DocumentReader", { document: song });
     Alert.alert(song.title, "Audio will be added by a temple administrator.");

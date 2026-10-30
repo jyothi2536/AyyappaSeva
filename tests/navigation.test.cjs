@@ -109,7 +109,7 @@ test("the header notification button also dismisses the admin stack", async () =
   app.tree.find((node) => node.type === "AppHeader").props.onUpdates();
   const next = app.router.getStateForAction(app.state, app.actions[0], app.options);
   assert.equal(next.routes.length, 1);
-  assert.equal(next.routes[0].params.screen, "Updates");
+  assert.equal(next.routes[0].params.screen, "Events");
 });
 
 test("successful logout waits for sign-out, returns Home, and removes admin back history", async () => {

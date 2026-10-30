@@ -15,6 +15,8 @@ import type { RootStackParamList, TabParamList } from "../types";
 import { Icon, IconName } from "../components/UI";
 import { colors } from "../theme";
 import DeekshaCountdown from "../components/DeekshaCountdown";
+import { IrumudiBody } from "./IrumudiScreen";
+import HomePadiGuidelines from "./HomePadiGuidelines";
 import QuickLinksFab from "../components/QuickLinksFab";
 import { DEEKSHA_REGISTRATION_ENABLED, showComingSoon } from "../features";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -31,6 +33,24 @@ const HERO = {
   subtitle: "A journey of devotion, discipline and inner transformation.",
   devotional: "Swamiye Saranam Ayyappa",
 };
+
+const HERO_BY_VIEW = {
+  vratham: {
+    eyebrow: "Ayyappa Deeksha",
+    title: "Guidelines to Follow During Ayyappa Vratham",
+    subtitle: "A journey of devotion, discipline and inner transformation.",
+  },
+  padi: {
+    eyebrow: "Home Padi Puja",
+    title: "Guidelines to Follow During Home Padipuja",
+    subtitle: "Prepare and perform the Padi Puja at home with devotion.",
+  },
+  irumudi: {
+    eyebrow: "Irumudi",
+    title: "Guidelines to Follow During Irumudi",
+    subtitle: "Prepare your Irumudi Kettu for the sacred pilgrimage.",
+  },
+} as const;
 
 const ABOUT = {
   title: "About Ayyappa Vratham",
@@ -132,6 +152,8 @@ const RESOURCES: { icon: IconName; label: string; route?: "Irumudi" | "Maladhara
 
 export default function DeekshaScreen() {
   const [open, setOpen] = useState<number | null>(0);
+  const [view, setView] = useState<"vratham" | "padi" | "irumudi">("vratham");
+  const hero = HERO_BY_VIEW[view];
   const tab = useNavigation<BottomTabNavigationProp<TabParamList>>();
   const root = tab.getParent<NativeStackNavigationProp<RootStackParamList>>();
   const openResource = (r: (typeof RESOURCES)[number]) => {
@@ -160,16 +182,48 @@ export default function DeekshaScreen() {
           style={StyleSheet.absoluteFill}
         />
         <View style={s.heroCopy}>
-          <Text style={s.heroEyebrow}>{HERO.eyebrow.toUpperCase()}</Text>
-          <Text style={s.heroTitle}>{HERO.title}</Text>
+          <Text style={s.heroEyebrow}>{hero.eyebrow.toUpperCase()}</Text>
+          <Text style={s.heroTitle}>{hero.title}</Text>
           <View style={s.heroRule} />
-          <Text style={s.heroSub}>{HERO.subtitle}</Text>
+          <Text style={s.heroSub}>{hero.subtitle}</Text>
           <Text style={s.heroDevotional}>{HERO.devotional}</Text>
         </View>
       </ImageBackground>
 
       <View style={s.page}>
+        {/* Guidelines selector */}
+        <View style={s.chips}>
+          {(
+            [
+              { key: "vratham", label: "Ayyappa Vratham" },
+              { key: "padi", label: "Home Padi Puja" },
+              { key: "irumudi", label: "Irumudi" },
+            ] as const
+          ).map((c) => {
+            const active = c.key === view;
+            return (
+              <Pressable
+                key={c.key}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                onPress={() => setView(c.key)}
+                style={[s.chip, active && s.chipActive]}
+              >
+                <Text style={[s.chipText, active && s.chipTextActive]} numberOfLines={2}>
+                  {c.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
         <DeekshaCountdown />
+        {view === "irumudi" ? (
+          <IrumudiBody />
+        ) : view === "padi" ? (
+          <HomePadiGuidelines />
+        ) : (
+        <>
         {/* About */}
         <View style={s.about}>
           <View style={[s.circle, { backgroundColor: colors.maroonSoft }]}>
@@ -226,41 +280,10 @@ export default function DeekshaScreen() {
             <Text style={s.noteBody}>{NOTE.body}</Text>
           </View>
         </View>
-
-        {/* Related resources */}
-        <Text style={s.resourcesTitle}>Related Deeksha Resources</Text>
-        <View style={s.resources}>
-          {RESOURCES.map((r) => (
-            <Pressable
-              key={r.label}
-              accessibilityRole="button"
-              onPress={() => openResource(r)}
-              style={({ pressed }) => [s.resource, pressed && { opacity: 0.75 }]}
-            >
-              <View style={[s.circle, { backgroundColor: colors.maroonSoft }]}>
-                {r.label === "Maladharana" ? (
-                  <MaterialCommunityIcons name="necklace" size={22} color={colors.maroon} />
-                ) : (
-                  <Icon name={r.icon} size={22} color={colors.maroon} />
-                )}
-              </View>
-              <Text style={s.resourceLabel} numberOfLines={2}>
-                {r.label}
-              </Text>
-              <Icon name="chevron-forward" size={18} color={colors.saffron} />
-            </Pressable>
-          ))}
-        </View>
+        </>
+        )}
       </View>
     </ScrollView>
-    <QuickLinksFab
-      actions={RESOURCES.filter((r) => r.route).map((r) => ({
-        label: r.label,
-        icon: r.icon,
-        mci: r.label === "Maladharana" ? "necklace" : undefined,
-        onPress: () => openResource(r),
-      }))}
-    />
     </View>
   );
 }
@@ -297,6 +320,31 @@ const s = StyleSheet.create({
     fontWeight: "600",
     marginTop: 8,
   },
+  chips: { flexDirection: "row", gap: 8, marginBottom: 16 },
+  chip: {
+    flex: 1,
+    minHeight: 44,
+    paddingHorizontal: 6,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  chipActive: { backgroundColor: colors.maroon, borderColor: colors.maroon },
+  chipText: { color: colors.maroon, fontSize: 12, fontWeight: "700", textAlign: "center" },
+  chipTextActive: { color: "#FFFFFF" },
+  soon: {
+    alignItems: "center",
+    gap: 8,
+    padding: 28,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  soonTitle: { color: colors.maroon, fontSize: 17, fontWeight: "700" },
   circle: {
     width: 44,
     height: 44,

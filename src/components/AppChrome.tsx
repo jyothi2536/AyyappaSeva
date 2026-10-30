@@ -19,7 +19,7 @@ import { IS_WEBSITE } from "../platform";
 
 export type AppTab = keyof TabParamList;
 
-const tabs: AppTab[] = ["Home", "Temple", "Updates", "Deeksha", "Songs", "Profile"];
+const tabs: AppTab[] = ["Home", "Temple", "Events", "Updates", "Deeksha", "Songs", "Profile"];
 type IonGlyph = React.ComponentProps<typeof Icon>["name"];
 type McGlyph = React.ComponentProps<typeof MaterialCommunityIcons>["name"];
 type TabIcon =
@@ -29,6 +29,7 @@ const icons: Record<AppTab, TabIcon> = {
   Home: { set: "ion", active: "home", inactive: "home-outline" },
   Songs: { set: "ion", active: "book", inactive: "book-outline" },
   Updates: { set: "mci", active: "spa", inactive: "spa-outline" },
+  Events: { set: "ion", active: "calendar", inactive: "calendar-outline" },
   Temple: { set: "mci", active: "temple-hindu", inactive: "temple-hindu-outline" },
   Deeksha: { set: "mci", active: "necklace", inactive: "necklace" },
   Profile: { set: "ion", active: "person", inactive: "person-outline" },
@@ -57,8 +58,9 @@ type MenuItem = {
 const menuItems: MenuItem[] = ([
   { label: "Home", icon: "home-outline", target: { tab: "Home" } },
   { label: "About", icon: "business-outline", target: { tab: "Temple" } },
-  { label: "Pooja Services", icon: "flower-outline", target: { tab: "Updates" } },
-  { label: "Deeksha", icon: "ellipse-outline", target: { tab: "Deeksha" } },
+  { label: "Events", icon: "calendar-outline", target: { tab: "Events" } },
+  { label: "Pooja & Registrations", icon: "flower-outline", target: { tab: "Updates" } },
+  { label: "Guidelines", icon: "ellipse-outline", target: { tab: "Deeksha" } },
   { label: "Resources", icon: "book-outline", target: { tab: "Songs" } },
   { label: "Profile", icon: "person-outline", target: { tab: "Profile" } },
   { label: "Start Deeksha", icon: "notifications-outline", target: { route: "StartDeeksha" } },
@@ -220,8 +222,9 @@ export function AppFooter({
   const labels: Record<AppTab, string> = {
     Home: t.home,
     Temple: "About",
-    Updates: "Pooja Services",
-    Deeksha: "Deeksha",
+    Updates: "Pooja &\nRegistrations",
+    Events: eventT.events,
+    Deeksha: "Guidelines",
     Songs: "Resources",
     Profile: t.profile,
   };
@@ -257,7 +260,12 @@ export function AppFooter({
                   );
                 })()}
               </View>
-              <Text style={[s.tabLabel, active && s.tabLabelActive]}>
+              <Text
+                style={[s.tabLabel, active && s.tabLabelActive]}
+                numberOfLines={2}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
+              >
                 {labels[tab]}
               </Text>
               <View style={[s.indicator, active && s.indicatorActive]} />
@@ -392,6 +400,8 @@ const s = StyleSheet.create({
   tabLabel: {
     color: colors.muted,
     fontSize: 9,
+    lineHeight: 11,
+    minHeight: 22,
     fontWeight: "600",
     textAlign: "center",
   },

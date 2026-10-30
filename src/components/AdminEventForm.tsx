@@ -14,6 +14,9 @@ import { useApp } from "../state/AppContext";
 import type { CalendarEvent, Language, LocalizedText } from "../types";
 import { colors, pickerTheme } from "../theme";
 import { GoldButton, Icon } from "./UI";
+import { PhotoField } from "./EventPhoto";
+import { pickEventPhoto } from "../services/eventPhoto";
+import { deleteEventPhoto, uploadEventPhoto } from "../services/firebase";
 
 function blankLocalized(): LocalizedText {
   return { en: "", te: "", ta: "", kn: "" };
@@ -100,6 +103,20 @@ export function AdminEventForm({
     initialEvent?.remindersEnabled ?? true,
   );
   const [saving, setSaving] = useState(false);
+  const [photoUri, setPhotoUri] = useState<string | undefined>(undefined);
+  const [photoRemoved, setPhotoRemoved] = useState(false);
+  const existingPhoto = photoRemoved ? undefined : initialEvent?.imageUrl;
+  const pickPhoto = async () => {
+    try {
+      const uri = await pickEventPhoto();
+      if (uri) setPhotoUri(uri);
+    } catch (reason) {
+      Alert.alert(
+        "Unable to open photos",
+        reason instanceof Error ? reason.message : "Please try again.",
+      );
+    }
+  };
 
   const updateLocalized = (
     setter: React.Dispatch<React.SetStateAction<LocalizedText>>,
@@ -131,7 +148,16 @@ export function AdminEventForm({
     }
     setSaving(true);
     try {
+      let imageUrl = existingPhoto;
+      let imagePath = photoRemoved ? undefined : initialEvent?.imagePath;
+      if (photoUri) {
+        const photo = await uploadEventPhoto("events", photoUri);
+        imageUrl = photo.url;
+        imagePath = photo.path;
+      }
       const common = {
+        imageUrl,
+        imagePath,
         title: fillTranslations(title, language),
         description: fillTranslations(description, language),
         date,
@@ -155,6 +181,9 @@ export function AdminEventForm({
         } as const;
         if (initialEvent) await editCalendarEvent(initialEvent.id, input);
         else await createCalendarEvent(input);
+      }
+      if (initialEvent?.imagePath && initialEvent.imagePath !== imagePath) {
+        await deleteEventPhoto(initialEvent.imagePath);
       }
       Alert.alert(initialEvent ? eventT.updated : eventT.saved);
       onSaved();
@@ -180,6 +209,17 @@ export function AdminEventForm({
         value={description[language]}
         onChange={(value) => updateLocalized(setDescription, value)}
         multiline
+      />
+
+      <Text style={s.label}>Event picture</Text>
+      <PhotoField
+        uri={photoUri ?? existingPhoto}
+        busy={saving}
+        onPick={() => void pickPhoto()}
+        onRemove={() => {
+          setPhotoUri(undefined);
+          setPhotoRemoved(true);
+        }}
       />
 
       <View style={s.sectionHeader}>

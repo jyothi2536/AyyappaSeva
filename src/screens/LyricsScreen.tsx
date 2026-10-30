@@ -2,7 +2,11 @@ import React, { useMemo } from "react";
 import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { getAyyappa108 } from "../../Ayyappa108Lyrics";
+import { getAyyappaAshtottara } from "../../AyyappaAshtottaraLyrics";
 import { getAyyappaDeepaaradhana } from "../../AyyappaDeepaaradhanaLyrics";
+import { getDurgaAshtottara } from "../../DurgaAshtottaraLyrics";
+import { getGaneshaAshtottara } from "../../GaneshaAshtottaraLyrics";
+import { getSubrahmanyaAshtottara } from "../../SubrahmanyaAshtottaraLyrics";
 import { BackButton, Icon } from "../components/UI";
 import { LyricsLanguagePicker } from "../components/LyricsLanguagePicker";
 import { useApp } from "../state/AppContext";
@@ -14,10 +18,26 @@ export default function LyricsScreen({
   route,
 }: NativeStackScreenProps<RootStackParamList, "Lyrics">) {
   const { lyricsLanguage: language, t } = useApp();
-  const is108 = route.params.kind === "saranams108";
+  const is108 =
+    route.params.kind === "saranams108" ||
+    route.params.kind === "ashtottara" ||
+    route.params.kind === "durgaAshtottara" ||
+    route.params.kind === "ganeshaAshtottara" ||
+    route.params.kind === "subrahmanyaAshtottara";
   const content = useMemo(
-    () => (is108 ? getAyyappa108(language) : getAyyappaDeepaaradhana(language)),
-    [is108, language],
+    () =>
+      route.params.kind === "ashtottara"
+        ? getAyyappaAshtottara(language)
+        : route.params.kind === "durgaAshtottara"
+          ? getDurgaAshtottara(language)
+          : route.params.kind === "ganeshaAshtottara"
+            ? getGaneshaAshtottara(language)
+            : route.params.kind === "subrahmanyaAshtottara"
+              ? getSubrahmanyaAshtottara(language)
+              : route.params.kind === "saranams108"
+                ? getAyyappa108(language)
+                : getAyyappaDeepaaradhana(language),
+    [route.params.kind, language],
   );
   return (
     <View style={s.root}>

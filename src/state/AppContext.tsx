@@ -133,7 +133,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const savedLyrics = values.lyricsLanguage ?? values.language;
         if (savedLyrics && lyricsLanguages.includes(savedLyrics as Language))
           setLyricsLanguageState(savedLyrics as Language);
-        if (values.songs) setSongs(JSON.parse(values.songs));
+        if (values.songs) {
+          // Keep any built-in songs added in newer app versions.
+          const saved: Song[] = JSON.parse(values.songs);
+          const have = new Set(saved.map((s) => s.id));
+          setSongs([...saved, ...initialSongs.filter((s) => !have.has(s.id))]);
+        }
         if (values.updates) setUpdates(JSON.parse(values.updates));
         if (values.wallpapers) setWallpapers(JSON.parse(values.wallpapers));
         if (values.calendarEvents)

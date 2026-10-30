@@ -186,10 +186,26 @@ async function cancelDaily() {
   const ids: string[] = raw ? JSON.parse(raw) : [];
   await Promise.all(ids.map((id) => Notifications.cancelScheduledNotificationAsync(id).catch(() => undefined)));
   await AsyncStorage.removeItem(DAILY_KEY);
+  // Also remove any sunrise/sunset reminders that are still scheduled but no longer
+  // tracked (left over from overlapping runs), so a reminder can never fire twice.
+  const pending = await Notifications.getAllScheduledNotificationsAsync().catch(() => []);
+  await Promise.all(
+    pending
+      .filter((n) => /^(🌅|🪔) Deeksha Day /.test(n.content.title ?? ""))
+      .map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier).catch(() => undefined)),
+  );
 }
 
+let dailyQueue: Promise<void> = Promise.resolve();
+
 /** (Re)schedules the upcoming sunrise / sunset reminders. Safe to call on every app open. */
-export async function syncDailyReminders() {
+export function syncDailyReminders() {
+  // Run one at a time: overlapping calls used to each schedule a full set (duplicates).
+  dailyQueue = dailyQueue.then(runSyncDailyReminders, runSyncDailyReminders);
+  return dailyQueue;
+}
+
+async function runSyncDailyReminders() {
   const start = await AsyncStorage.getItem(START_KEY);
   await cancelDaily();
   if (!start) return;

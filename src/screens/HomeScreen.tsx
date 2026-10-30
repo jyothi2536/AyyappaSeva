@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import DeekshaCountdown from "../components/DeekshaCountdown";
 import LiveCard from "../components/LiveCard";
 import {
@@ -11,34 +11,51 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Icon } from "../components/UI";
-import { PhotoThumb } from "../components/EventPhoto";
 import { getHomeTempleFraming } from "../components/homeTempleFraming";
 import { homeTempleImage } from "../data/content";
 import { eventStart, formatEventDate, localize } from "../data/events";
 import { verseOfTheDay } from "../data/dailyScripture";
 import { useDevotee } from "../services/devotee";
-import { dayFallbackImage, isOpenNowWeekly, pujaForDay, useWeeklySchedule, weekdayKey } from "../data/today";
+import { isOpenNowWeekly, pujaForDay, useWeeklySchedule, weekdayKey } from "../data/today";
 import { useApp } from "../state/AppContext";
 import type { RootStackParamList, TabParamList } from "../types";
 import { colors } from "../theme";
 
+const WEEKDAY_LABEL = {
+  sun: "Sunday",
+  mon: "Monday",
+  tue: "Tuesday",
+  wed: "Wednesday",
+  thu: "Thursday",
+  fri: "Friday",
+  sat: "Saturday",
+} as const;
+
 export default function HomeScreen() {
-  const { t, events, language, updates } = useApp();
+  const { t, events, language } = useApp();
   const verse = verseOfTheDay();
-  const latestUpdates = [...updates]
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 3);
   const now = Date.now();
-  const nextEvent = events
+  const upcomingEvents = events
     .filter((e) => e.kind === "temple" && eventStart(e).getTime() >= now)
-    .sort((a, b) => eventStart(a).getTime() - eventStart(b).getTime())[0];
+    .sort((a, b) => eventStart(a).getTime() - eventStart(b).getTime())
+    .slice(0, 10);
+  const { width: screenWidth } = useWindowDimensions();
+  const cardWidth = upcomingEvents.length > 1 ? screenWidth - 70 : screenWidth - 40;
   const today = useWeeklySchedule();
+  // Re-check every minute so the card flips to the next day's puja at midnight
+  // (and the Open/Closed pill stays current) even if the app is left open.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((n) => n + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
   const dayKey = weekdayKey();
   const puja = pujaForDay(today, dayKey);
   const devotee = useDevotee();
@@ -113,19 +130,29 @@ export default function HomeScreen() {
             <Icon name="time-outline" size={24} color={colors.gold} />
             <View style={s.todayList}>
               <View style={s.todayRow}>
-                {puja.time ? <Text style={s.todayTime}>{puja.time}</Text> : null}
+                <Text style={s.todayDay}>{WEEKDAY_LABEL[dayKey]}</Text>
                 <Text style={s.todayName} numberOfLines={3}>
                   {puja.name}
                 </Text>
+                {puja.time ? (
+                  <View style={s.todayTimeRow}>
+                    <Icon name="time-outline" size={16} color={colors.gold} />
+                    <Text style={s.todayTime}>{puja.time}</Text>
+                  </View>
+                ) : null}
               </View>
             </View>
-            <View style={s.todayDivider} />
-            <Image
-              source={puja.imageUrl ? { uri: puja.imageUrl } : dayFallbackImage(dayKey)}
-              accessibilityLabel={puja.name}
-              resizeMode="cover"
-              style={s.todayImage}
-            />
+            {puja.imageUrl ? (
+              <>
+                <View style={s.todayDivider} />
+                <Image
+                  source={{ uri: puja.imageUrl }}
+                  accessibilityLabel={puja.name}
+                  resizeMode="cover"
+                  style={s.todayImage}
+                />
+              </>
+            ) : null}
           </View>
           )}
         </View>
@@ -162,46 +189,59 @@ export default function HomeScreen() {
           </Pressable>
         </View>
         <Title text="Upcoming Major Event" />
-        {nextEvent ? (
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [s.major, pressed && { opacity: 0.8 }]}
-            onPress={() => tab.navigate("Updates")}
+        {upcomingEvents.length ? (
+          <ScrollView
+            horizontal
+            nestedScrollEnabled
+            showsHorizontalScrollIndicator={false}
+            decelerationRate="fast"
+            snapToInterval={cardWidth + 10}
+            snapToAlignment="start"
+            contentContainerStyle={{ gap: 10 }}
           >
-            <View style={s.eventDate}>
-              <Text style={s.eventMonth}>
-                {eventStart(nextEvent)
-                  .toLocaleString("en-US", { month: "short" })
-                  .toUpperCase()}
-              </Text>
-              <Text style={s.eventDay}>{eventStart(nextEvent).getDate()}</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={s.majorTitle} numberOfLines={2}>
-                {localize(nextEvent.title, language)}
-              </Text>
-              <View style={s.eventMeta}>
-                <Icon name="calendar-outline" size={14} color={colors.gold} />
-                <Text style={s.eventMetaText}>
-                  {formatEventDate(nextEvent, language)} · {nextEvent.startTime}
-                </Text>
-              </View>
-              {nextEvent.venue ? (
-                <View style={s.eventMeta}>
-                  <Icon name="location-outline" size={14} color={colors.gold} />
-                  <Text style={s.eventMetaText} numberOfLines={1}>
-                    {nextEvent.venue}
+            {upcomingEvents.map((nextEvent) => (
+              <Pressable
+                key={nextEvent.id}
+                accessibilityRole="button"
+                style={({ pressed }) => [s.major, { width: cardWidth }, pressed && { opacity: 0.8 }]}
+                onPress={() => root?.navigate("EventDetail", { eventId: nextEvent.id })}
+              >
+                <View style={s.eventDate}>
+                  <Text style={s.eventMonth}>
+                    {eventStart(nextEvent)
+                      .toLocaleString("en-US", { month: "short" })
+                      .toUpperCase()}
                   </Text>
+                  <Text style={s.eventDay}>{eventStart(nextEvent).getDate()}</Text>
                 </View>
-              ) : null}
-              {localize(nextEvent.description, language) ? (
-                <Text style={s.eventDesc} numberOfLines={2}>
-                  {localize(nextEvent.description, language)}
-                </Text>
-              ) : null}
-            </View>
-            <Icon name="chevron-forward" size={20} color={colors.goldFill} />
-          </Pressable>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.majorTitle} numberOfLines={2}>
+                    {localize(nextEvent.title, language)}
+                  </Text>
+                  <View style={s.eventMeta}>
+                    <Icon name="calendar-outline" size={14} color={colors.gold} />
+                    <Text style={s.eventMetaText}>
+                      {formatEventDate(nextEvent, language)} · {nextEvent.startTime}
+                    </Text>
+                  </View>
+                  {nextEvent.venue ? (
+                    <View style={s.eventMeta}>
+                      <Icon name="location-outline" size={14} color={colors.gold} />
+                      <Text style={s.eventMetaText} numberOfLines={1}>
+                        {nextEvent.venue}
+                      </Text>
+                    </View>
+                  ) : null}
+                  {localize(nextEvent.description, language) ? (
+                    <Text style={s.eventDesc} numberOfLines={2}>
+                      {localize(nextEvent.description, language)}
+                    </Text>
+                  ) : null}
+                </View>
+                <Icon name="chevron-forward" size={20} color={colors.goldFill} />
+              </Pressable>
+            ))}
+          </ScrollView>
         ) : (
           <View style={[s.major, s.eventEmpty]}>
             <Icon name="calendar-clear-outline" size={22} color={colors.goldFill} />
@@ -214,35 +254,6 @@ export default function HomeScreen() {
           <Pressable
             accessibilityRole="button"
             style={({ pressed }) => [s.pairCard, pressed && { opacity: 0.8 }]}
-            onPress={() => tab.navigate("Updates")}
-          >
-            <View style={s.pairHead}>
-              <View style={s.pairIcon}>
-                <Icon name="megaphone-outline" size={18} color={colors.maroon} />
-              </View>
-              <Text style={s.pairTitle}>Latest Updates</Text>
-            </View>
-            {latestUpdates.length === 0 ? (
-              <Text style={s.pairEmpty}>No updates yet.</Text>
-            ) : (
-              latestUpdates.map((u) => (
-                <View key={u.id} style={s.updateRow}>
-                  <View style={s.updateDot} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.updateTitle} numberOfLines={2}>
-                      {u.title}
-                    </Text>
-                    <Text style={s.updateDate}>{u.date}</Text>
-                  </View>
-                  <PhotoThumb uri={u.imageUrl} label={u.title} style={s.updateThumb} />
-                </View>
-              ))
-            )}
-            <Text style={s.pairLink}>View all ›</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [s.pairCard, pressed && { opacity: 0.8 }]}
             onPress={() => root?.navigate("Scriptures")}
           >
             <View style={s.pairHead}>
@@ -251,10 +262,10 @@ export default function HomeScreen() {
               </View>
               <Text style={s.pairTitle}>Scripture of the Day</Text>
             </View>
-            <Text style={s.verseText} numberOfLines={5}>
+            <Text style={s.verseText}>
               “{verse.text}”
             </Text>
-            <Text style={s.verseMeaning} numberOfLines={5}>
+            <Text style={s.verseMeaning}>
               {verse.meaning}
             </Text>
             <Text style={s.verseSource}>— {verse.source}</Text>
@@ -317,9 +328,11 @@ const s = StyleSheet.create({
   hours: { color: colors.text, fontSize: 12, fontWeight: "600" },
   todayBody: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 12 },
   todayList: { flex: 1, gap: 8 },
-  todayRow: { flexDirection: "row", gap: 10 },
-  todayTime: { color: colors.text, fontSize: 12, fontWeight: "600", width: 58 },
-  todayName: { color: colors.text, fontSize: 12, flex: 1 },
+  todayRow: { gap: 6 },
+  todayDay: { color: colors.gold, fontSize: 11, fontWeight: "800", letterSpacing: 1, textTransform: "uppercase" },
+  todayTimeRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  todayTime: { color: colors.text, fontSize: 14, fontWeight: "700" },
+  todayName: { color: colors.text, fontSize: 17, fontWeight: "800", lineHeight: 22 },
   todayThumb: { width: 38, height: 38, borderRadius: 8 },
   todayDivider: { width: 1, alignSelf: "stretch", backgroundColor: colors.line },
   todayImage: { width: 110, height: 120, borderRadius: 12 },
@@ -536,11 +549,11 @@ const s = StyleSheet.create({
   updateDate: { color: colors.muted, fontSize: 10, marginTop: 2 },
   verseText: {
     color: colors.maroon,
-    fontSize: 13,
+    fontSize: 16,
     fontStyle: "italic",
     fontWeight: "600",
-    lineHeight: 18,
+    lineHeight: 25,
   },
-  verseMeaning: { color: colors.muted, fontSize: 11, lineHeight: 16, marginTop: 8 },
-  verseSource: { color: colors.gold, fontSize: 11, fontWeight: "700", marginTop: "auto", paddingTop: 8 },
+  verseMeaning: { color: colors.muted, fontSize: 13, lineHeight: 20, marginTop: 12 },
+  verseSource: { color: colors.gold, fontSize: 13, fontWeight: "700", marginTop: "auto", paddingTop: 8 },
 });

@@ -1,19 +1,35 @@
 import React, { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { Icon, Page, ScreenHeader } from "../components/UI";
 import { PhotoThumb } from "../components/EventPhoto";
 import { localizedUpdates } from "../data/content";
 import { formatEventDate, localize } from "../data/events";
+import { removeTempleUpdate } from "../services/firebase";
 import { useApp } from "../state/AppContext";
-import type { CalendarEvent } from "../types";
+import type { CalendarEvent, Update } from "../types";
 import { colors } from "../theme";
 
 type MainSection = "events" | "announcements";
 type EventFilter = "all" | CalendarEvent["kind"];
 
 export default function UpdatesScreen() {
-  const { language, updates, events, eventT } = useApp();
+  const { language, updates, events, eventT, isAdmin } = useApp();
   const [section, setSection] = useState<MainSection>("events");
+  const confirmDelete = (update: Update) => {
+    Alert.alert("Delete this update?", `"${update.title}" will be removed for everyone.`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          void removeTempleUpdate(update).catch((reason) =>
+            Alert.alert("Unable to delete", reason instanceof Error ? reason.message : "Please try again."),
+          );
+        },
+      },
+    ]);
+  };
   const [filter, setFilter] = useState<EventFilter>("all");
   const announcements = language === "en" ? updates : localizedUpdates[language];
   const visibleEvents = events
@@ -68,6 +84,20 @@ export default function UpdatesScreen() {
                   <PhotoThumb uri={item.imageUrl} label={item.title} style={s.photo} />
                 </View>
               ) : null}
+              {isAdmin ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Delete ${item.title}`}
+                  style={s.deleteBtn}
+                  onPress={() => {
+                    const original = updates.find((u) => u.id === item.id);
+                    if (original) confirmDelete(original);
+                  }}
+                >
+                  <Icon name="trash-outline" size={16} color={colors.red} />
+                  <Text style={s.deleteText}>Delete</Text>
+                </Pressable>
+              ) : null}
             </View>
           ))}
         </>
@@ -78,9 +108,15 @@ export default function UpdatesScreen() {
 
 function EventCard({ event }: { event: CalendarEvent }) {
   const { language, eventT } = useApp();
+  const navigation = useNavigation<any>();
   const padi = event.kind === "padiPuja";
   return (
-    <View style={[s.eventCard, padi && s.padiCard]}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={localize(event.title, language)}
+      onPress={() => navigation.navigate("EventDetail", { eventId: event.id })}
+      style={[s.eventCard, padi && s.padiCard]}
+    >
       <View style={[s.eventIcon, padi && s.padiIcon]}>
         <Icon name={padi ? "home" : "business"} color={colors.ink} />
       </View>
@@ -107,8 +143,9 @@ function EventCard({ event }: { event: CalendarEvent }) {
             {[event.contactName, event.contactPhone].filter(Boolean).join(" · ")}
           </Text>
         ) : null}
+        <Text style={s.more}>{event.imageUrl ? "Tap for picture & details" : "Tap for details"}</Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -129,6 +166,8 @@ function Filter({ active, label, onPress }: { active: boolean; label: string; on
 }
 
 const s = StyleSheet.create({
+  deleteBtn: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", marginTop: 12, paddingVertical: 6 },
+  deleteText: { color: colors.red, fontSize: 13, fontWeight: "800" },
   mainTabs: { flexDirection: "row", borderRadius: 17, backgroundColor: colors.surface, padding: 4, marginBottom: 13 },
   mainTab: { flex: 1, minHeight: 43, alignItems: "center", justifyContent: "center" },
   mainTabActive: { backgroundColor: colors.goldFill, borderRadius: 14 },
@@ -149,6 +188,7 @@ const s = StyleSheet.create({
   schedule: { color: colors.gold, fontSize: 10, fontWeight: "700", marginTop: 7 },
   venue: { color: colors.muted, fontSize: 10, marginTop: 4 },
   host: { color: colors.muted, fontSize: 10, fontWeight: "700", marginTop: 5 },
+  more: { color: colors.gold, fontSize: 10, fontWeight: "800", marginTop: 8 },
   contact: { color: colors.muted, fontSize: 9, marginTop: 8 },
   card: { backgroundColor: colors.surface, borderRadius: 18, borderWidth: 1, borderColor: colors.line, padding: 16, marginBottom: 10 },
   feature: { backgroundColor: colors.surface },

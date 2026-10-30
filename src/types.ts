@@ -24,6 +24,8 @@ export type BaseCalendarEvent = {
   contactName?: string;
   contactPhone?: string;
   remindersEnabled: boolean;
+  imageUrl?: string;
+  imagePath?: string;
   notificationIds?: string[];
   createdAt: string;
 };
@@ -132,6 +134,7 @@ export type TabParamList = {
   Home: undefined;
   Songs: undefined;
   Updates: undefined;
+  Events: undefined;
   Temple: undefined;
   Deeksha: undefined;
   Profile: undefined;
@@ -142,7 +145,7 @@ export type RootStackParamList = {
   Wallpapers: undefined;
   Scriptures: undefined;
   Harivarasanam: undefined;
-  Lyrics: { kind: "saranams108" | "deepaaradhana" };
+  Lyrics: { kind: "saranams108" | "deepaaradhana" | "ashtottara" | "durgaAshtottara" | "ganeshaAshtottara" | "subrahmanyaAshtottara" };
   DocumentReader: { document: Song };
   Admin: undefined;
   AdminTempleEvent: { eventId?: string } | undefined;
@@ -156,6 +159,8 @@ export type RootStackParamList = {
   BookPooja: undefined;
   ContactTemple: undefined;
   Irumudi: undefined;
+  VideoPlayer: { title: string; url: string };
+  EventDetail: { eventId: string };
   IrumudiRegistration: undefined;
   HomePadiPuja: undefined;
   Maladharana: undefined;
