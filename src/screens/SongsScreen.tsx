@@ -2,13 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import SegmentedControl from "../components/SegmentedControl";
 import YouTubeVideos from "../components/YouTubeVideos";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Icon, Page, ScreenHeader } from "../components/UI";
 import { DEITIES, SONG_DEITY, SONG_TABS, type TabLang } from "../data/songCatalog";
 import { builtInDocuments } from "../data/content";
+import { harivarasanamLyrics } from "../../HarivarasanamLyrics";
 import {
   downloadSong,
   listDownloadedSongs,
@@ -21,8 +22,25 @@ import type { BuiltInDocument, RootStackParamList, Song } from "../types";
 import { colors } from "../theme";
 
 type ResourceSection = "songs" | "books";
+type PujaGroup = "process" | "channel";
 const SECTION_KEY = "resourcesSection";
 
+// Atlanta Ayyappa Temple YouTube channel video (KJ Yesudas).
+const SUPRABHATAM_VIDEO = {
+  id: "vE5ShJ705kg",
+  title: "Ayyappa Suprabhatham",
+  subtitle: "KJ Yesudas · Atlanta Ayyappa Temple channel",
+  url: "https://m.youtube.com/watch?v=vE5ShJ705kg&t=2s",
+  thumbnail: "https://i.ytimg.com/vi/vE5ShJ705kg/mqdefault.jpg",
+};
+
+// Harivarasanam by K J Yesudas, with the offline lyrics shown under the video.
+const HARIVARASANAM_VIDEO = {
+  id: "lUqeGuFfoDo",
+  title: "Harivarasanam",
+  url: "https://m.youtube.com/watch?v=lUqeGuFfoDo",
+  thumbnail: "https://i.ytimg.com/vi/lUqeGuFfoDo/mqdefault.jpg",
+};
 const FEATURED_DOCUMENT_IDS = new Set([
   "mahishasura-mardini-four-languages",
   "lingashtakam-four-languages",
@@ -65,7 +83,7 @@ export default function SongsScreen() {
     }
   };
   const deepaSong = songs.find((x) => x.id === "4");
-  const [pujaOpen, setPujaOpen] = useState<"process" | "channel" | null>("process");
+  const [pujaOpen, setPujaOpen] = useState<PujaGroup | null>("process");
   const [openKey, setOpenKey] = useState<string | null | undefined>(undefined);
   useEffect(() => {
     AsyncStorage.getItem("resourcesLang").then((v) => {
@@ -317,7 +335,36 @@ export default function SongsScreen() {
             ) : null}
             {isOpen && g.key === "process" ? (
               <View style={s.list}>
-                {pujaProcessParts.map((doc) => (
+                {pujaProcessParts.map((doc) =>
+                  doc.id === "puja-suprabhatham" ? (
+                  // Same slot as the Suprabhatham lyrics: video on top, lyrics below it.
+                  <Pressable
+                    key={doc.id}
+                    onPress={() =>
+                      navigation.navigate("VideoPlayer", {
+                        title: SUPRABHATAM_VIDEO.title,
+                        url: SUPRABHATAM_VIDEO.url,
+                        lyricsDocument: doc,
+                      })
+                    }
+                    style={s.row}
+                  >
+                    <View>
+                      <Image
+                        source={{ uri: SUPRABHATAM_VIDEO.thumbnail }}
+                        style={{ width: 96, height: 54, borderRadius: 8, backgroundColor: "#EEE" }}
+                      />
+                      <View style={{ position: "absolute", right: 4, bottom: 4, backgroundColor: "rgba(230,33,23,0.9)", borderRadius: 8, paddingHorizontal: 5, paddingVertical: 2 }}>
+                        <Icon name="play" color="#fff" size={12} />
+                      </View>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.title}>{SUPRABHATAM_VIDEO.title}</Text>
+                      <Text style={s.meta}>Video with lyrics · KJ Yesudas</Text>
+                    </View>
+                    <Icon name="chevron-forward" color={colors.muted} size={18} />
+                  </Pressable>
+                  ) : (
                   <React.Fragment key={doc.id}>
                   <Pressable onPress={() => openBuiltInDocument(doc)} style={s.row}>
                     <View style={[s.cover, { backgroundColor: colors.greenSoft }]}>
@@ -330,6 +377,21 @@ export default function SongsScreen() {
                     <Text style={s.type}>PDF</Text>
                     <Icon name="chevron-forward" color={colors.muted} size={18} />
                   </Pressable>
+                  {doc.id === "puja-subrahmanya-ashtottara" ? (
+                    <Pressable
+                      onPress={() => navigation.navigate("Lyrics", { lang: tab, kind: "durgaAshtottara" })}
+                      style={s.row}
+                    >
+                      <View style={[s.cover, { backgroundColor: colors.greenSoft }]}>
+                        <Icon name="musical-note" color={colors.success} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={s.title}>Sri Durga Ashtottara Satanaamavali</Text>
+                        <Text style={s.meta}>108 names · English, Telugu, Tamil & Kannada</Text>
+                      </View>
+                      <Icon name="chevron-forward" color={colors.muted} size={18} />
+                    </Pressable>
+                  ) : null}
                   {doc.id === "puja-ayyappa-saranam-108" ? (
                     <Pressable
                       onPress={() => navigation.navigate("Lyrics", { lang: "te", kind: "saranams108" })}
@@ -346,7 +408,8 @@ export default function SongsScreen() {
                     </Pressable>
                   ) : null}
                   </React.Fragment>
-                ))}
+                  ),
+                )}
               </View>
             ) : null}
             {isOpen && g.key === "process" && deepaSong ? (
@@ -358,6 +421,35 @@ export default function SongsScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={s.title}>{deepaSong.title}</Text>
                     <Text style={s.meta}>{deepaSong.subtitle}</Text>
+                  </View>
+                  <Icon name="chevron-forward" color={colors.muted} size={18} />
+                </Pressable>
+              </View>
+            ) : null}
+            {isOpen && g.key === "process" ? (
+              <View style={s.list}>
+                <Pressable
+                  onPress={() =>
+                    navigation.navigate("VideoPlayer", {
+                      title: HARIVARASANAM_VIDEO.title,
+                      url: HARIVARASANAM_VIDEO.url,
+                      lyricsText: harivarasanamLyrics,
+                    })
+                  }
+                  style={s.row}
+                >
+                  <View>
+                    <Image
+                      source={{ uri: HARIVARASANAM_VIDEO.thumbnail }}
+                      style={{ width: 96, height: 54, borderRadius: 8, backgroundColor: "#EEE" }}
+                    />
+                    <View style={{ position: "absolute", right: 4, bottom: 4, backgroundColor: "rgba(230,33,23,0.9)", borderRadius: 8, paddingHorizontal: 5, paddingVertical: 2 }}>
+                      <Icon name="play" color="#fff" size={12} />
+                    </View>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.title}>{HARIVARASANAM_VIDEO.title}</Text>
+                    <Text style={s.meta}>Video with lyrics · K. J. Yesudas</Text>
                   </View>
                   <Icon name="chevron-forward" color={colors.muted} size={18} />
                 </Pressable>

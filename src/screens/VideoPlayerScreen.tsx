@@ -1,8 +1,12 @@
-import React, { useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { WebView } from "react-native-webview";
+import Pdf from "react-native-pdf-jsi";
 import { BackButton } from "../components/UI";
+import { LyricsLanguagePicker } from "../components/LyricsLanguagePicker";
+import { prepareBuiltInDocument } from "../services/documents";
+import { useApp } from "../state/AppContext";
 import type { RootStackParamList } from "../types";
 import { colors } from "../theme";
 
@@ -31,8 +35,25 @@ export default function VideoPlayerScreen({
   navigation,
   route,
 }: NativeStackScreenProps<RootStackParamList, "VideoPlayer">) {
-  const { title, url } = route.params;
+  const { title, url, lyricsDocument, lyricsText } = route.params;
+  const { lyricsLanguage } = useApp();
+  const hasLyrics = Boolean(lyricsDocument || lyricsText);
   const [loading, setLoading] = useState(true);
+  const [lyricsUri, setLyricsUri] = useState<string | null>(null);
+  const [lyricsError, setLyricsError] = useState("");
+  const { width, height } = useWindowDimensions();
+  // With lyrics: the video keeps a 16:9 strip on top and the lyrics fill the rest.
+  const videoHeight = Math.min(Math.round((width * 9) / 16) + 16, Math.round(height * 0.4));
+  useEffect(() => {
+    if (!lyricsDocument) return;
+    let alive = true;
+    prepareBuiltInDocument(lyricsDocument)
+      .then((uri) => alive && setLyricsUri(uri))
+      .catch((e) => alive && setLyricsError(e instanceof Error ? e.message : "Unable to load the lyrics."));
+    return () => {
+      alive = false;
+    };
+  }, [lyricsDocument]);
   return (
     <View style={s.root}>
       <View style={s.header}>
@@ -41,7 +62,7 @@ export default function VideoPlayerScreen({
           {title}
         </Text>
       </View>
-      <View style={s.web}>
+      <View style={hasLyrics ? [s.web, { flex: 0, height: videoHeight }] : s.web}>
         {loading && (
           <View style={s.loading}>
             <ActivityIndicator size="large" color={colors.gold} />
@@ -62,6 +83,33 @@ export default function VideoPlayerScreen({
           onLoadEnd={() => setLoading(false)}
         />
       </View>
+      {lyricsText ? (
+        <View style={s.lyrics}>
+          <View style={s.pickerRow}>
+            <LyricsLanguagePicker only={(Object.keys(lyricsText) as (keyof typeof lyricsText)[])} />
+          </View>
+          <ScrollView contentContainerStyle={s.lyricsBody}>
+            <Text selectable style={s.lyricsText}>
+              {lyricsText[lyricsLanguage] ?? lyricsText.en ?? ""}
+            </Text>
+          </ScrollView>
+        </View>
+      ) : lyricsDocument ? (
+        <View style={s.lyrics}>
+          <Text style={s.lyricsLabel}>LYRICS</Text>
+          {lyricsUri ? (
+            <Pdf
+              source={{ uri: lyricsUri, cache: false }}
+              style={s.pdf}
+              onError={(reason) => setLyricsError(String(reason))}
+            />
+          ) : lyricsError ? (
+            <Text style={s.lyricsError}>{lyricsError}</Text>
+          ) : (
+            <ActivityIndicator color={colors.gold} style={{ marginTop: 24 }} />
+          )}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -78,6 +126,26 @@ const s = StyleSheet.create({
   },
   title: { flex: 1, color: colors.maroon, fontSize: 18, fontWeight: "700" },
   web: { flex: 1, backgroundColor: "#000" },
+  lyrics: { flex: 1, backgroundColor: colors.background },
+  lyricsLabel: {
+    color: colors.gold,
+    fontSize: 11,
+    letterSpacing: 1.5,
+    fontWeight: "900",
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
+  pdf: { flex: 1, backgroundColor: colors.background },
+  pickerRow: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4 },
+  lyricsBody: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 60 },
+  lyricsText: {
+    color: colors.text,
+    fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+    fontSize: 17,
+    lineHeight: 29,
+  },
+  lyricsError: { color: colors.muted, fontSize: 12, padding: 16 },
   loading: {
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",

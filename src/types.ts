@@ -182,7 +182,14 @@ export type RootStackParamList = {
   BookPooja: undefined;
   ContactTemple: undefined;
   Irumudi: undefined;
-  VideoPlayer: { title: string; url: string };
+  VideoPlayer: {
+    title: string;
+    url: string;
+    /** Bundled PDF shown under the video. */
+    lyricsDocument?: BuiltInDocument;
+    /** Offline lyrics text per language shown under the video. */
+    lyricsText?: Partial<Record<Language, string>>;
+  };
   EventDetail: { eventId: string };
   IrumudiRegistration: undefined;
   HomePadiPuja: undefined;
