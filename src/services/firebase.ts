@@ -44,6 +44,7 @@ import type {
   CalendarEvent,
   CalendarEventInput,
   TodaySchedule,
+  LibrarySong,
   Update,
   Wallpaper,
   WeeklySchedule,
@@ -329,6 +330,32 @@ export async function editTempleUpdate(id: string, title: string, body: string, 
 export async function removeTempleUpdate(update: Update) {
   await deleteDoc(doc(requireDb(), "updates", update.id));
   await deleteEventPhoto(update.imagePath);
+}
+
+// ---- Song library (PDFs in Storage, list in Firestore "songs") ---------------
+
+export function subscribeToLibrarySongs(
+  receive: (songs: LibrarySong[]) => void,
+  fail: (error: Error) => void,
+): Unsubscribe {
+  if (!db) return () => undefined;
+  return onSnapshot(
+    collection(db, "songs"),
+    (snapshot) => {
+      receive(
+        snapshot.docs
+          .map((item) => ({ ...item.data(), id: item.id }) as LibrarySong)
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+      );
+    },
+    fail,
+  );
+}
+
+/** Admin: removes a song from the app (Firestore entry first, then its file). */
+export async function removeLibrarySong(song: LibrarySong) {
+  await deleteDoc(doc(requireDb(), "songs", song.id));
+  if (song.path) await deleteObject(storageRef(getStorage(app!), song.path)).catch(() => undefined);
 }
 
 // ---- Wallpapers (images in Storage, list in Firestore) ----------------------

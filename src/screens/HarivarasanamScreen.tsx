@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Platform,
@@ -22,8 +22,14 @@ import { colors } from "../theme";
 
 export default function HarivarasanamScreen({
   navigation,
+  route,
 }: NativeStackScreenProps<RootStackParamList, "Harivarasanam">) {
-  const { language, lyricsLanguage, t } = useApp();
+  const { language, lyricsLanguage, setLyricsLanguage, t } = useApp();
+  const tabLang = route.params?.lang;
+  useEffect(() => {
+    if (tabLang) setLyricsLanguage(tabLang);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabLang]);
   const [view, setView] = useState<"video" | "lyrics">("video");
   const [loading, setLoading] = useState(true);
   const ui = harivarasanamUi[language];
@@ -86,7 +92,7 @@ export default function HarivarasanamScreen({
         </>
       ) : (
         <ScrollView contentContainerStyle={s.content}>
-          <LyricsLanguagePicker />
+          <LyricsLanguagePicker only={tabLang ? [tabLang, "en"] : undefined} />
           <View style={[s.badge, { marginTop: 14 }]}>
             <Icon name="cloud-done" color="#A7D0A6" />
             <Text style={s.badgeText}>{ui.offline}</Text>

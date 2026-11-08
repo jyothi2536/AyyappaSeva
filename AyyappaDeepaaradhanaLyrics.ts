@@ -11,6 +11,7 @@ const stanzas = [
   ['Kaantha Shringa Nivasa Namo Namo', 'Shantidayaka Deva Namo Namo', 'Deva Vandhya Gireesha Namo Namo - Paradeva'],
   ['Moolamantra Swaroopa Namo Namo', 'Balavigraha Moola Namo Namo', 'Puthradayaka Deva Namo Namo - Varabaala'],
   ['Eesha Keshava Soono Namo Namo', 'Paasha Janma Vinasha Namo Namo', 'Aarthi Naashana Keerthey Namo Namo - Divya Roopa'],
+  ['Deepa Mangala Jyothi Namo Namo', 'Thooyaambala Leela Namo Namo', 'Deva Kunjari Paada Namo Namo.... Aru Thaara!'],
 ] as const;
 
 const ending = 'Swamiye Sharanam Ayyappa';
@@ -23,6 +24,18 @@ const itransStanzas = [
   ['kAnta shRRi~Nga nivAsA namO namO', 'shAntidAyaka devA namO namO', 'deva vandhya girIshA namO namO - paradevA'],
   ['mUlamantra svarUpA namO namO', 'bAlavigraha mUlA namO namO', 'putradAyaka devA namO namO - varabAlA'],
   ['Isha keshava sUnO namO namO', 'pAsha janma vinAshA namO namO', 'Arti nAshana kIrtE namO namO - divya rUpA'],
+  ['dIpa ma~Ngala jyOti namO namO', 'tUyAmbala lIlA namO namO', 'dEva ku~njarI pAda namO namO.... aru tArA!'],
+] as const;
+const tamilStanzas = [
+  ['ஆர்ய வம்ச சுஜதா நமோ நமோ', 'வீர்யாதிவ்ய விளாசா நமோ நமோ', 'சாஷ்வதாஷ்ரித தேவா நமோ நமோ - பகுகோடி'],
+  ['பூத வந்திதா தேவா நமோ நமோ', 'பீதி நாஷனாரூபா நமோ நமோ', 'மோகனாம்புஜ பாதா நமோ நமோ - மாணிகந்த'],
+  ['ராஜசேவக வீரா நமோ நமோ', 'வாஜி வாரண வாஹா நமோ நமோ', 'கீதா ந்ரத்ய வினோடா நமோ நமோ - வீராதி வீரா'],
+  ['கோர பாப வினாஷா நமோ நமோ', 'ஹாரா நூபுர தாரி நமோ நமோ', 'ஜ்யோதிஷார்சித பீதா நமோ நமோ - ஜெயசீல'],
+  ['த்யான மங்கள ரூபா நமோ நமோ', 'காநாந்தர வாஸா நமோ நமோ', 'வாஸவார்ஷ்ரித தேவா நமோ நமோ - ந்ருபதாச'],
+  ['காந்த ஸ்ரிங்க நிவாசா நமோ நமோ', 'ஷாந்தி தாயகா தேவா நமோ நமோ', 'தேவ வந்த்ய கிரீஷா நமோ நமோ - பரதேவா'],
+  ['மூல மந்திர ஸ்வரூபா நமோ நமோ', 'பால விக்ரஹா மூலா நமோ நமோ', 'புத்ரதாயகா தேவா நமோ நமோ - வரபாலா'],
+  ['ஈஷ கேசவ சூனா நமோ நமோ', 'பாச ஜன்ம வினாஷா நமோ நமோ', 'ஆர்தி நாஸன மூர்தி நமோ நமோ - திவ்ய ரூபா'],
+  ['தீப மங்கள ஜ்யோதி நமோ நமோ', 'தூய அம்பல லீலா நமோ நமோ', 'தேவ குஞ்சரி பாதா நமோ நமோ.... அருள் தாரா!'],
 ] as const;
 const scriptByLanguage: Record<Exclude<DeepaaradhanaLanguage, 'en'>, string> = {
   te: 'telugu', ta: 'tamil', kn: 'kannada',
@@ -38,7 +51,7 @@ const ui = {
 export function getAyyappaDeepaaradhana(language: DeepaaradhanaLanguage) {
   return {
     ...ui[language],
-    stanzas: language === 'en' ? stanzas : itransStanzas.map((stanza) => stanza.map((line) => Sanscript.t(line, 'itrans_dravidian', scriptByLanguage[language]))),
-    ending: language === 'en' ? ending : Sanscript.t('svAmiye sharaNaM ayyappA', 'itrans_dravidian', scriptByLanguage[language]),
+    stanzas: language === 'en' ? stanzas : language === 'ta' ? tamilStanzas : itransStanzas.map((stanza) => stanza.map((line) => Sanscript.t(line, 'itrans_dravidian', scriptByLanguage[language]))),
+    ending: language === 'en' ? ending : language === 'ta' ? 'சுவாமியே சரணம் ஐயப்பா' : Sanscript.t('svAmiye sharaNaM ayyappA', 'itrans_dravidian', scriptByLanguage[language]),
   };
 }

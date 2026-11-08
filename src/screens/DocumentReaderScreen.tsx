@@ -106,7 +106,8 @@ export default function DocumentReaderScreen({
       {isPdf && document.uri ? (
         <View style={s.pdfStage}>
           <Pdf
-            source={{ uri: document.uri }}
+            source={{ uri: document.uri, cache: false }}
+            page={document.startPage ?? 1}
             style={s.pdf}
             onLoadComplete={setPages}
             onPageChanged={(current, count) => {

@@ -140,7 +140,8 @@ const DAILY_WINDOW = 14;
 export const MORNING_LEAD_MIN = 60;
 export const EVENING_LEAD_MIN = 60;
 
-export type DailyReminder = { date: Date; title: string; body: string };
+/** `key` is a stable identifier (one per day + kind) so scheduling the same reminder twice replaces it. */
+export type DailyReminder = { key: string; date: Date; title: string; body: string };
 
 /** Morning + evening reminders for every remaining Deeksha day in the window. */
 export function dailyReminders(
@@ -165,14 +166,17 @@ export function dailyReminders(
     const morning = new Date(times.sunrise.getTime() - MORNING_LEAD_MIN * 60_000);
     const evening = new Date(times.sunset.getTime() - EVENING_LEAD_MIN * 60_000);
     const label = `Deeksha Day ${i + 1} of ${totalDays}`;
+    const dayKey = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
     if (morning > now)
       out.push({
+        key: `deeksha-sunrise-${dayKey}`,
         date: morning,
         title: `🌅 ${label}`,
         body: `${hello} Today sunrise time is ${formatLocalTime(times.sunrise)}. Start your puja before sunrise.`,
       });
     if (evening > now)
       out.push({
+        key: `deeksha-sunset-${dayKey}`,
         date: evening,
         title: `🪔 ${label}`,
         body: `${hello} Today sunset time is ${formatLocalTime(times.sunset)}. Please start offering your evening puja.`,
@@ -218,6 +222,7 @@ async function runSyncDailyReminders() {
     for (const r of reminders) {
       ids.push(
         await Notifications.scheduleNotificationAsync({
+          identifier: r.key,
           content: { title: r.title, body: r.body, sound: true, data: { route: "Deeksha" } },
           trigger: {
             type: Notifications.SchedulableTriggerInputTypes.DATE,

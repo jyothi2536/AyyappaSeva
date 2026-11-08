@@ -34,12 +34,14 @@ import {
   subscribeToAdmin,
   subscribeToAdminAccounts,
   subscribeToCalendarEvents,
+  subscribeToLibrarySongs,
   subscribeToUpdates,
   subscribeToWallpapers,
   updateCalendarEvent,
 } from "../services/firebase";
 import { registerForLivePush } from "../services/livePush";
 import type {
+  LibrarySong,
   AdminAccount,
   AdminSession,
   CalendarEvent,
@@ -64,6 +66,8 @@ type AppState = {
   updates: Update[];
   /** Phone wallpapers managed by admins in Firebase. */
   wallpapers: Wallpaper[];
+  /** Song PDFs managed by admins in Firebase. */
+  librarySongs: LibrarySong[];
   events: CalendarEvent[];
   eventT: (typeof eventTranslations)[Language];
   isAdmin: boolean;
@@ -100,6 +104,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [songs, setSongs] = useState<Song[]>(initialSongs);
   const [updates, setUpdates] = useState<Update[]>(initialUpdates);
   const [wallpapers, setWallpapers] = useState<Wallpaper[]>([]);
+  const [librarySongs, setLibrarySongs] = useState<LibrarySong[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>(initialCalendarEvents);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminSession, setAdminSession] = useState<AdminSession | null>(null);
@@ -118,6 +123,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           "songs",
           "updates",
           "wallpapers",
+          "librarySongs",
           "calendarEvents",
           "admin",
           "onboardingComplete",
@@ -141,6 +147,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
         if (values.updates) setUpdates(JSON.parse(values.updates));
         if (values.wallpapers) setWallpapers(JSON.parse(values.wallpapers));
+        if (values.librarySongs) setLibrarySongs(JSON.parse(values.librarySongs));
         if (values.calendarEvents)
           setEvents(JSON.parse(values.calendarEvents));
         setOnboardingComplete(values.onboardingComplete === "true");
@@ -171,6 +178,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setWallpapers(shared);
       void AsyncStorage.setItem("wallpapers", JSON.stringify(shared));
     }, fail);
+    const stopLibrary = subscribeToLibrarySongs((shared) => {
+      setLibrarySongs(shared);
+      void AsyncStorage.setItem("librarySongs", JSON.stringify(shared));
+    }, fail);
     const stopAdmin = subscribeToAdmin((session) => {
       setAdminSession(session);
       setIsAdmin(Boolean(session));
@@ -179,6 +190,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       stopEvents();
       stopUpdates();
       stopWallpapers();
+      stopLibrary();
       stopAdmin();
     };
   }, []);
@@ -342,6 +354,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       songs,
       updates,
       wallpapers,
+      librarySongs,
       events,
       eventT: eventTranslations[language],
       isAdmin,
@@ -369,6 +382,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       songs,
       updates,
       wallpapers,
+      librarySongs,
       events,
       isAdmin,
       adminSession,

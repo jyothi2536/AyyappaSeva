@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { getAyyappa108 } from "../../Ayyappa108Lyrics";
@@ -17,7 +17,12 @@ export default function LyricsScreen({
   navigation,
   route,
 }: NativeStackScreenProps<RootStackParamList, "Lyrics">) {
-  const { lyricsLanguage: language, t } = useApp();
+  const { lyricsLanguage: language, setLyricsLanguage, t } = useApp();
+  const tabLang = route.params.lang;
+  useEffect(() => {
+    if (tabLang) setLyricsLanguage(tabLang);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabLang]);
   const is108 =
     route.params.kind === "saranams108" ||
     route.params.kind === "ashtottara" ||
@@ -36,7 +41,7 @@ export default function LyricsScreen({
               ? getSubrahmanyaAshtottara(language)
               : route.params.kind === "saranams108"
                 ? getAyyappa108(language)
-                : getAyyappaDeepaaradhana(language),
+                : getAyyappaDeepaaradhana("en"),
     [route.params.kind, language],
   );
   return (
@@ -49,7 +54,9 @@ export default function LyricsScreen({
         </View>
       </View>
       <ScrollView contentContainerStyle={s.content}>
-        <LyricsLanguagePicker />
+        {route.params.kind === "deepaaradhana" ? null : (
+          <LyricsLanguagePicker only={tabLang ? [tabLang, "en"] : undefined} />
+        )}
         <View style={[s.badge, { marginTop: 14 }]}>
           <Icon name="cloud-done" size={18} color="#A7D0A6" />
           <Text style={s.badgeText}>{content.offline}</Text>

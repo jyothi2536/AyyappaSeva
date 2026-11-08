@@ -53,6 +53,43 @@ export async function prepareBuiltInDocument(document: BuiltInDocument) {
   return source;
 }
 
+const songDir = () => `${FileSystem.documentDirectory}library/`;
+const songPath = (id: string) => `${songDir()}${id}.pdf`;
+
+/** Ids of the cloud songs the devotee chose to download for offline use. */
+export async function listDownloadedSongs() {
+  const names = await FileSystem.readDirectoryAsync(songDir()).catch(() => [] as string[]);
+  return new Set(names.filter((n) => n.endsWith(".pdf")).map((n) => n.slice(0, -4)));
+}
+
+/** Saves a cloud song on the phone so it opens without internet. */
+export async function downloadSong(id: string, url: string) {
+  await FileSystem.makeDirectoryAsync(songDir(), { intermediates: true }).catch(() => undefined);
+  const path = songPath(id);
+  const partial = `${path}.part`;
+  try {
+    const result = await FileSystem.downloadAsync(url, partial);
+    if (result.status !== 200) throw new Error("download failed");
+    await FileSystem.moveAsync({ from: partial, to: path });
+  } catch {
+    await FileSystem.deleteAsync(partial, { idempotent: true }).catch(() => undefined);
+    throw new Error("Could not download this song. Check your internet connection.");
+  }
+}
+
+export async function removeDownloadedSong(id: string) {
+  await FileSystem.deleteAsync(songPath(id), { idempotent: true }).catch(() => undefined);
+}
+
+/** Local file when downloaded, otherwise the online link (streamed each time). */
+export async function resolveCloudSong(id: string, url: string, downloaded: boolean) {
+  if (downloaded) {
+    const info = await FileSystem.getInfoAsync(songPath(id));
+    if (info.exists) return songPath(id);
+  }
+  return url;
+}
+
 /** Removes the full copies older versions saved in app storage (about 19 MB). */
 async function removeOldCopies() {
   const dir = FileSystem.documentDirectory;

@@ -41,3 +41,6 @@ credentials.json
 # Website build output
 website/dist/
 website/.expo/
+song-library/njabm/
+song-library/shiva/
+song-library/telugu/

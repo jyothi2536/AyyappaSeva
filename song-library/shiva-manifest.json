@@ -1,0 +1,156 @@
+[
+ {
+  "id": "lingashtakam-english",
+  "title": "Lingashtakam",
+  "subtitle": "English \u00b7 8 verses",
+  "section": "Shiva",
+  "deity": "shiva",
+  "lang": "en",
+  "file": "lingashtakam-english.pdf",
+  "size": 64277,
+  "order": 0
+ },
+ {
+  "id": "lingashtakam-telugu",
+  "title": "Lingashtakam",
+  "subtitle": "Telugu \u00b7 8 verses",
+  "section": "Shiva",
+  "deity": "shiva",
+  "lang": "te",
+  "file": "lingashtakam-telugu.pdf",
+  "size": 114879,
+  "order": 1
+ },
+ {
+  "id": "lingashtakam-tamil",
+  "title": "Lingashtakam",
+  "subtitle": "Tamil \u00b7 8 verses",
+  "section": "Shiva",
+  "deity": "shiva",
+  "lang": "ta",
+  "file": "lingashtakam-tamil.pdf",
+  "size": 109487,
+  "order": 2
+ },
+ {
+  "id": "lingashtakam-kannada",
+  "title": "Lingashtakam",
+  "subtitle": "Kannada \u00b7 8 verses",
+  "section": "Shiva",
+  "deity": "shiva",
+  "lang": "kn",
+  "file": "lingashtakam-kannada.pdf",
+  "size": 87003,
+  "order": 3
+ },
+ {
+  "id": "bilvashtakam-english",
+  "title": "Bilvashtakam",
+  "subtitle": "English \u00b7 8 verses",
+  "section": "Shiva",
+  "deity": "shiva",
+  "lang": "en",
+  "file": "bilvashtakam-english.pdf",
+  "size": 62957,
+  "order": 4
+ },
+ {
+  "id": "bilvashtakam-telugu",
+  "title": "Bilvashtakam",
+  "subtitle": "Telugu \u00b7 8 verses",
+  "section": "Shiva",
+  "deity": "shiva",
+  "lang": "te",
+  "file": "bilvashtakam-telugu.pdf",
+  "size": 114326,
+  "order": 5
+ },
+ {
+  "id": "bilvashtakam-tamil",
+  "title": "Bilvashtakam",
+  "subtitle": "Tamil \u00b7 8 verses",
+  "section": "Shiva",
+  "deity": "shiva",
+  "lang": "ta",
+  "file": "bilvashtakam-tamil.pdf",
+  "size": 106561,
+  "order": 6
+ },
+ {
+  "id": "bilvashtakam-kannada",
+  "title": "Bilvashtakam",
+  "subtitle": "Kannada \u00b7 8 verses",
+  "section": "Shiva",
+  "deity": "shiva",
+  "lang": "kn",
+  "file": "bilvashtakam-kannada.pdf",
+  "size": 84969,
+  "order": 7
+ },
+ {
+  "id": "kala-bhairava-ashtakam-english",
+  "title": "Kala Bhairava Ashtakam",
+  "subtitle": "English \u00b7 8 verses",
+  "section": "Shiva",
+  "deity": "shiva",
+  "lang": "en",
+  "file": "kala-bhairava-ashtakam-english.pdf",
+  "size": 65698,
+  "order": 8
+ },
+ {
+  "id": "kala-bhairava-ashtakam-telugu",
+  "title": "Kala Bhairava Ashtakam",
+  "subtitle": "Telugu \u00b7 8 verses",
+  "section": "Shiva",
+  "deity": "shiva",
+  "lang": "te",
+  "file": "kala-bhairava-ashtakam-telugu.pdf",
+  "size": 133555,
+  "order": 9
+ },
+ {
+  "id": "kala-bhairava-ashtakam-tamil",
+  "title": "Kala Bhairava Ashtakam",
+  "subtitle": "Tamil \u00b7 8 verses",
+  "section": "Shiva",
+  "deity": "shiva",
+  "lang": "ta",
+  "file": "kala-bhairava-ashtakam-tamil.pdf",
+  "size": 123080,
+  "order": 10
+ },
+ {
+  "id": "kala-bhairava-ashtakam-kannada",
+  "title": "Kala Bhairava Ashtakam",
+  "subtitle": "Kannada \u00b7 8 verses",
+  "section": "Shiva",
+  "deity": "shiva",
+  "lang": "kn",
+  "file": "kala-bhairava-ashtakam-kannada.pdf",
+  "size": 91856,
+  "order": 11
+ },
+ {
+  "id": "sambasiva",
+  "title": "Sambasiva",
+  "subtitle": "Telugu \u00b7 Devotional song sheet \u00b7 1 page",
+  "section": "Shiva",
+  "deity": "shiva",
+  "lang": "te",
+  "file": "sambasiva.pdf",
+  "size": 1134483,
+  "order": 12
+ },
+ {
+  "id": "aatagadharaa-shiva",
+  "title": "Aatagadharaa Shiva",
+  "subtitle": "Telugu \u00b7 English lyrics \u00b7 1 page",
+  "section": "Shiva",
+  "deity": "shiva",
+  "lang": "te",
+  "file": "aatagadharaa-shiva.pdf",
+  "size": 4854,
+  "order": 13
+ }
+]

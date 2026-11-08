@@ -53,6 +53,8 @@ export type CalendarEventInput =
   | TempleCalendarEventInput
   | PadiPujaCalendarEventInput;
 export type Song = {
+  startPage?: number;
+  endPage?: number;
   id: string;
   title: string;
   subtitle: string;
@@ -82,7 +84,28 @@ export type Wallpaper = {
   height: number;
   createdAt: string;
 };
-export type BuiltInDocument = Song & { assetSource: number; category: string };
+/** A song/book PDF stored in Firebase (Storage file + Firestore "songs" document). */
+export type LibrarySong = {
+  id: string;
+  title: string;
+  subtitle: string;
+  section: string;
+  deity: string;
+  lang: "en" | "te" | "ta" | "kn";
+  url: string;
+  path: string;
+  size: number;
+  order: number;
+};
+export type BuiltInDocument = Song & {
+  remoteUrl?: string;
+  deity?: string;
+  assetSource: number;
+  category: string;
+  startPage?: number;
+  endPage?: number;
+  lang?: "en" | "te" | "ta" | "kn";
+};
 
 export type DeityKey =
   | "ayyappa"
@@ -144,8 +167,8 @@ export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<TabParamList> | undefined;
   Wallpapers: undefined;
   Scriptures: undefined;
-  Harivarasanam: undefined;
-  Lyrics: { kind: "saranams108" | "deepaaradhana" | "ashtottara" | "durgaAshtottara" | "ganeshaAshtottara" | "subrahmanyaAshtottara" };
+  Harivarasanam: { lang?: "te" | "ta" | "kn" } | undefined;
+  Lyrics: { lang?: "te" | "ta" | "kn"; kind: "saranams108" | "deepaaradhana" | "ashtottara" | "durgaAshtottara" | "ganeshaAshtottara" | "subrahmanyaAshtottara" };
   DocumentReader: { document: Song };
   Admin: undefined;
   AdminTempleEvent: { eventId?: string } | undefined;

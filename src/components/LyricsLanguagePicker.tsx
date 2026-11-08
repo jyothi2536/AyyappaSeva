@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
 import { languages } from "../data/content";
+import type { Language } from "../types";
 import { useApp } from "../state/AppContext";
 import { colors } from "../theme";
 
@@ -8,7 +9,7 @@ import { colors } from "../theme";
  * The app UI is English-only, but devotional lyrics and documents in the
  * music section can be read in every supported script.
  */
-export function LyricsLanguagePicker() {
+export function LyricsLanguagePicker({ only }: { only?: Language[] }) {
   const { lyricsLanguage, setLyricsLanguage } = useApp();
   return (
     <ScrollView
@@ -17,7 +18,7 @@ export function LyricsLanguagePicker() {
       contentContainerStyle={s.row}
       accessibilityRole="tablist"
     >
-      {languages.map((item) => {
+      {languages.filter((l) => !only || only.includes(l.id)).map((item) => {
         const active = item.id === lyricsLanguage;
         return (
           <Pressable
